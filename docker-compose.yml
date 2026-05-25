@@ -1,0 +1,125 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: habitizer-postgres
+    environment:
+      POSTGRES_USER: habitizer
+      POSTGRES_PASSWORD: habitizer_secret
+      POSTGRES_DB: habitizer_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    networks:
+      - habitizer-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: habitizer-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - habitizer-network
+
+  gateway-service:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: habitizer-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - AUTH_SERVICE_URL=http://auth-service:8001
+      - HABIT_SERVICE_URL=http://habit-service:8002
+      - ANALYTICS_SERVICE_URL=http://analytics-service:8003
+    depends_on:
+      - auth-service
+      - habit-service
+      - analytics-service
+    networks:
+      - habitizer-network
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
+    container_name: habitizer-auth
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=habitizer
+      - DB_PASSWORD=habitizer_secret
+      - DB_NAME=habitizer_db
+      - JWT_SECRET=super_secret_jwt_key_habitizer_2026
+    depends_on:
+      - postgres
+    networks:
+      - habitizer-network
+
+  habit-service:
+    build:
+      context: .
+      dockerfile: services/habit-service/Dockerfile
+    container_name: habitizer-habit
+    ports:
+      - "8002:8002"
+    environment:
+      - PORT=8002
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=habitizer
+      - DB_PASSWORD=habitizer_secret
+      - DB_NAME=habitizer_db
+    depends_on:
+      - postgres
+    networks:
+      - habitizer-network
+
+  analytics-service:
+    build:
+      context: .
+      dockerfile: services/analytics-service/Dockerfile
+    container_name: habitizer-analytics
+    ports:
+      - "8003:8003"
+    environment:
+      - PORT=8003
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=habitizer
+      - DB_PASSWORD=habitizer_secret
+      - DB_NAME=habitizer_db
+    depends_on:
+      - postgres
+    networks:
+      - habitizer-network
+
+  notification-worker:
+    build:
+      context: .
+      dockerfile: services/notification-worker/Dockerfile
+    container_name: habitizer-worker
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=habitizer
+      - DB_PASSWORD=habitizer_secret
+      - DB_NAME=habitizer_db
+    depends_on:
+      - postgres
+    networks:
+      - habitizer-network
+
+networks:
+  habitizer-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
