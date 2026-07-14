@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add New Habit — Habitizer</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/pages.css">
+</head>
+<body class="sidebar-layout">
+  <div id="navbar-container"></div>
+
+  <main class="page-content">
+    <div class="page-header">
+      <h1>Add New Habit</h1>
+    </div>
+
+    <div class="create-page-grid">
+      <!-- Habit Creation Form Card -->
+      <div class="card-static card-padded">
+        <form id="create-habit-form">
+          <!-- Step 1: Trigger & Bad Habit -->
+          <div class="form-step-section">
+            <h3 class="form-step-heading">
+              Step 1: The Trigger and Unwanted Habit
+            </h3>
+
+            <div class="form-group">
+              <label class="form-label" for="bad_habit">Unwanted Habit to Eliminate *</label>
+              <input class="form-input" type="text" id="bad_habit" name="bad_habit" placeholder="e.g. Late night snacking, doomscrolling in bed" required>
+              <span class="form-helper-text">The repetitive coping habit you want to replace.</span>
+            </div>
+
+            <div class="form-group auth-form-group">
+              <label class="form-label" for="cue_trigger">Trigger or Cue *</label>
+              <input class="form-input" type="text" id="cue_trigger" name="cue_trigger" placeholder="e.g. Feeling stressed or bored after 10 PM" required>
+              <span class="form-helper-text">The emotional state, time of day, or environment that sparks the urge.</span>
+            </div>
+          </div>
+
+          <!-- Step 2: Category & Frequency -->
+          <div class="form-step-section">
+            <h3 class="form-step-heading">
+              Step 2: Category and Schedule
+            </h3>
+
+            <div class="form-group">
+              <label class="form-label">Habit Category</label>
+              <div class="selection-pills-group" id="category-pills">
+                <button type="button" class="selection-pill active" data-val="Health & Diet">Health &amp; Diet</button>
+                <button type="button" class="selection-pill" data-val="Digital Wellbeing">Digital Wellbeing</button>
+                <button type="button" class="selection-pill" data-val="Mindfulness">Mindfulness</button>
+                <button type="button" class="selection-pill" data-val="Movement & Posture">Movement &amp; Posture</button>
+                <button type="button" class="selection-pill" data-val="Focus & Learning">Focus &amp; Learning</button>
+                <button type="button" class="selection-pill" data-val="Relaxation">Relaxation</button>
+              </div>
+              <input type="hidden" id="category-hidden" name="category" value="Health & Diet">
+            </div>
+
+            <div class="form-row-split">
+              <div class="form-group">
+                <label class="form-label">Frequency</label>
+                <div class="selection-pills-group" id="frequency-pills">
+                  <button type="button" class="selection-pill active" data-val="daily">Daily</button>
+                  <button type="button" class="selection-pill" data-val="weekdays">Weekdays</button>
+                  <button type="button" class="selection-pill" data-val="twice_weekly">2x / Week</button>
+                  <button type="button" class="selection-pill" data-val="weekly">Weekly</button>
+                </div>
+                <input type="hidden" id="frequency-hidden" name="frequency" value="daily">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="scheduled_time">Alert Time</label>
+                <input class="form-input" type="time" id="scheduled_time" name="scheduled_time" value="22:30">
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Healthy Routine -->
+          <div class="form-step-section">
+            <h3 class="form-step-heading">
+              Step 3: Healthy Replacement Routine
+            </h3>
+
+            <div class="form-group">
+              <label class="form-label" for="replacement_habit">Replacement Action</label>
+              <input class="form-input" type="text" id="replacement_habit" name="replacement_habit" placeholder="e.g. Drink chamomile tea & 5 min breathing">
+              <div class="auth-form-group">
+                <span class="form-helper-text">Quick suggestions:</span>
+                <div class="quick-chips-wrap">
+                  <button type="button" class="quick-chip" data-routine="5-Minute Deep Breathing">Deep Breathing</button>
+                  <button type="button" class="quick-chip" data-routine="Drink a Glass of Cold Water">Glass of Cold Water</button>
+                  <button type="button" class="quick-chip" data-routine="Read 5 Pages of a Book">Read 5 Pages</button>
+                  <button type="button" class="quick-chip" data-routine="10 Push-ups or Light Stretch">10 Push-ups / Stretch</button>
+                  <button type="button" class="quick-chip" data-routine="Herbal Chamomile Tea">Chamomile Tea</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4: Neuro-Reward -->
+          <div>
+            <h3 class="form-step-heading">
+              Step 4: Neuro-Reward
+            </h3>
+
+            <div class="form-group">
+              <label class="form-label" for="reward">Reward for Completing Routine</label>
+              <input class="form-input" type="text" id="reward" name="reward" placeholder="e.g. 10 Shop Coins & 15m screen time pass" value="10 Shop Coins">
+              <span class="form-helper-text">Positive dopamine reinforcement after successfully substituting the urge.</span>
+            </div>
+          </div>
+
+          <!-- Form Action Buttons -->
+          <div class="form-actions-footer">
+            <a href="/" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary" id="btn-save-habit">Save Habit Loop</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Right Column: Live Substitution Loop Preview -->
+      <div>
+        <div class="loop-preview-box">
+          <h3 class="section-title-sm">Live Habit Loop Preview</h3>
+          <p class="section-desc-sm">
+            How your habit substitution loop will be scheduled:
+          </p>
+
+          <div class="preview-cards-list">
+            <div class="preview-step-card">
+              <span class="badge badge-warning badge-mb-xs">1. CUE TRIGGER</span>
+              <div class="preview-val-title" id="prev-cue">Stress or boredom after 10 PM</div>
+            </div>
+
+            <div class="preview-step-card">
+              <span class="badge badge-error badge-mb-xs">2. BAD HABIT</span>
+              <div class="preview-val-title" id="prev-bad">Late night snacking</div>
+            </div>
+
+            <div class="preview-step-card">
+              <span class="badge badge-success badge-mb-xs">3. HEALTHY ROUTINE</span>
+              <div class="preview-val-title preview-val-emerald" id="prev-routine">5-Minute Deep Breathing</div>
+            </div>
+
+            <div class="preview-step-card">
+              <span class="badge badge-running badge-mb-xs">4. REWARD</span>
+              <div class="preview-val-title preview-val-amber" id="prev-reward">10 Shop Coins</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/icons.js"></script>
+  <!-- Core Layer -->
+  <script src="/js/core/StorageService.js"></script>
+  <script src="/js/core/UserRepository.js"></script>
+  <script src="/js/core/UserStateRepository.js"></script>
+  <script src="/js/core/ThemeManager.js"></script>
+  <!-- Services Layer -->
+  <script src="/js/services/BackendSync.js"></script>
+  <script src="/js/core/AuthService.js"></script>
+  <script src="/js/services/HabitService.js"></script>
+  <script src="/js/services/EconomyService.js"></script>
+  <script src="/js/services/StreakService.js"></script>
+  <script src="/js/services/CatalogService.js"></script>
+  <!-- UI Components -->
+  <script src="/js/components/UIComponent.js"></script>
+  <script src="/js/components/ToastComponent.js"></script>
+  <script src="/js/components/NavbarComponent.js"></script>
+  <script src="/js/components/HabitCardComponent.js"></script>
+  <script src="/js/components/StatsGridComponent.js"></script>
+  <script src="/js/components/CatalogCardComponent.js"></script>
+  <script src="/js/components/CalendarGridComponent.js"></script>
+  <!-- API Facade & Page Controller -->
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/create.js"></script>
+</body>
+</html>
