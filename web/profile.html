@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile — Habitizer</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/pages.css">
+</head>
+<body class="sidebar-layout">
+  <div id="navbar-container"></div>
+
+  <main class="page-content">
+    <div class="page-header">
+      <h1 id="profile-heading">Welcome, Alex</h1>
+      <p>Manage your account, view your clean streak records, check in for the evening, and explore suggested habits.</p>
+    </div>
+
+    <!-- Nightly Check-In Quick Access Banner -->
+    <div class="card-static card-padded quick-checkin-banner">
+      <div class="quick-checkin-content-group">
+        <div class="quick-checkin-icon-box">
+          <span data-icon="checkin" data-size="20"></span>
+        </div>
+        <div>
+          <h3 class="quick-checkin-title">Nightly Habit Check-In</h3>
+          <p class="quick-checkin-desc">Audit today's habit outcomes, log substitutions, and earn 10 coins.</p>
+        </div>
+      </div>
+      <a href="/checkin" class="btn btn-primary btn-sm">
+        Complete Today's Check-In
+      </a>
+    </div>
+
+    <div class="profile-grid-layout">
+      <!-- Account Info Card -->
+      <div class="card-static card-padded profile-card-center">
+        <div class="user-avatar-circle profile-avatar-large" id="prof-avatar">A</div>
+        <h2 class="profile-user-name" id="prof-name">Alex Doe</h2>
+        <div class="profile-user-email" id="prof-email">alex.doe@habitizer.io</div>
+        <div class="profile-badge-wrap">
+          <span class="tier-badge tier-free" id="prof-tier-badge">Free Plan (3 Habits)</span>
+        </div>
+
+        <div class="profile-details-list">
+          <div class="profile-detail-row">
+            <span class="stat-label">Account ID:</span>
+            <span class="profile-mono-id" id="prof-id">usr_demo_88</span>
+          </div>
+          <div class="profile-detail-row">
+            <span class="stat-label">Member Since:</span>
+            <span>Aug 2026</span>
+          </div>
+        </div>
+
+        <button class="btn btn-secondary btn-sm btn-full profile-toggle-btn" id="btn-toggle-tier-prof">
+          Switch Free / Premium Preview
+        </button>
+      </div>
+
+      <!-- Streaks & Integrations Column -->
+      <div class="profile-integrations-column">
+        <!-- Performance Ledger -->
+        <div class="card-static card-padded">
+          <h3 class="section-title-sm">Habit Replacement Record</h3>
+          <div class="profile-metrics-grid">
+            <div class="profile-metric-tile">
+              <div class="profile-metric-label">Longest Streak</div>
+              <div class="profile-metric-val stat-val-blue" id="prof-longest-streak">21 Days</div>
+            </div>
+            <div class="profile-metric-tile">
+              <div class="profile-metric-label">Substituted</div>
+              <div class="profile-metric-val stat-val-blue" id="prof-substitutions">26 Total</div>
+            </div>
+            <div class="profile-metric-tile">
+              <div class="profile-metric-label">Relapses</div>
+              <div class="profile-metric-val stat-val-rose" id="prof-relapses">2 Total</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="progress-bar-label-flex">
+              <span>Substitution Success Rate</span>
+              <span class="stat-val-blue" id="prof-rate-display">92.8%</span>
+            </div>
+            <div class="profile-progress-wrap">
+              <div class="profile-progress-fill" id="prof-progress-bar"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Google Calendar Integration (Mock Only) -->
+        <div class="card-static card-padded" id="cal-sync-card">
+          <div class="integration-header-row">
+            <div class="integration-title-group">
+              <div class="integration-icon-box">
+                <span data-icon="calendar" data-size="18"></span>
+              </div>
+              <div>
+                <h4 class="integration-title">Google Calendar Sync</h4>
+                <p class="integration-desc">Avoid scheduling routine alerts during busy calendar events.</p>
+              </div>
+            </div>
+            <span class="badge badge-success" id="cal-sync-badge">Connected</span>
+          </div>
+
+          <div class="integration-action-row">
+            <button class="btn btn-secondary btn-sm" id="btn-toggle-cal-sync">
+              Toggle Calendar Sync
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suggested Habits Section -->
+    <div class="suggested-habits-container" id="suggested-habits">
+      <div class="suggested-habits-header">
+        <div>
+          <h2 class="section-title-md">Suggested Habits</h2>
+          <p class="section-desc-sm">
+            Curated evidence-based routines you can adopt to replace bad habit triggers.
+          </p>
+        </div>
+        <a href="/create" class="btn btn-primary btn-sm">
+          <span data-icon="plus" data-size="16"></span> Custom Habit
+        </a>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div class="catalog-filters" id="suggested-filters">
+        <button class="filter-btn active" data-cat="all">All Suggestions</button>
+        <button class="filter-btn" data-cat="Mindfulness">Mindfulness</button>
+        <button class="filter-btn" data-cat="Hydration">Hydration</button>
+        <button class="filter-btn" data-cat="Physical Action">Physical Action</button>
+        <button class="filter-btn" data-cat="Focus & Learning">Focus &amp; Learning</button>
+        <button class="filter-btn" data-cat="Relaxation">Relaxation</button>
+      </div>
+
+      <!-- Suggested Habits Grid -->
+      <div class="catalog-grid" id="suggested-habits-grid">
+        <!-- Rendered via CatalogCardComponent in profile.js -->
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/icons.js"></script>
+  <!-- Core Layer -->
+  <script src="/js/core/StorageService.js"></script>
+  <script src="/js/core/UserRepository.js"></script>
+  <script src="/js/core/UserStateRepository.js"></script>
+  <script src="/js/core/ThemeManager.js"></script>
+  <!-- Services Layer -->
+  <script src="/js/services/BackendSync.js"></script>
+  <script src="/js/core/AuthService.js"></script>
+  <script src="/js/services/HabitService.js"></script>
+  <script src="/js/services/EconomyService.js"></script>
+  <script src="/js/services/StreakService.js"></script>
+  <script src="/js/services/CatalogService.js"></script>
+  <!-- UI Components -->
+  <script src="/js/components/UIComponent.js"></script>
+  <script src="/js/components/ToastComponent.js"></script>
+  <script src="/js/components/NavbarComponent.js"></script>
+  <script src="/js/components/HabitCardComponent.js"></script>
+  <script src="/js/components/StatsGridComponent.js"></script>
+  <script src="/js/components/CatalogCardComponent.js"></script>
+  <script src="/js/components/CalendarGridComponent.js"></script>
+  <!-- API Facade & Page Controller -->
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/profile.js"></script>
+</body>
+</html>
