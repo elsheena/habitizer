@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — Habitizer</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body class="sidebar-layout">
+  <div id="navbar-container"></div>
+
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h1 class="auth-title">Start Changing Habits</h1>
+        <p class="auth-subtitle">Create your account to start building replacement loops.</p>
+      </div>
+
+      <form id="register-form">
+        <div class="form-group auth-form-group">
+          <label class="form-label" for="reg-name">Full Name</label>
+          <input class="form-input" type="text" id="reg-name" placeholder="e.g. Jordan Smith" required autocomplete="name">
+        </div>
+
+        <div class="form-group auth-form-group">
+          <label class="form-label" for="reg-email">Email Address</label>
+          <input class="form-input" type="email" id="reg-email" placeholder="jordan@example.com" required autocomplete="email">
+        </div>
+
+        <div class="form-group auth-form-group">
+          <label class="form-label" for="reg-password">Password</label>
+          <input class="form-input" type="password" id="reg-password" placeholder="At least 6 characters" required autocomplete="new-password">
+        </div>
+
+        <button type="submit" class="btn btn-primary auth-submit-btn" id="btn-register-submit">
+          Get Started Free
+        </button>
+      </form>
+
+      <div class="auth-prompt-footer">
+        Already have an account? <a href="/login" class="auth-link-bold">Sign In</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/icons.js"></script>
+  <!-- Core Layer -->
+  <script src="/js/core/StorageService.js"></script>
+  <script src="/js/core/UserRepository.js"></script>
+  <script src="/js/core/UserStateRepository.js"></script>
+  <script src="/js/core/ThemeManager.js"></script>
+  <!-- Services Layer -->
+  <script src="/js/services/BackendSync.js"></script>
+  <script src="/js/core/AuthService.js"></script>
+  <script src="/js/services/HabitService.js"></script>
+  <script src="/js/services/EconomyService.js"></script>
+  <script src="/js/services/StreakService.js"></script>
+  <script src="/js/services/CatalogService.js"></script>
+  <!-- UI Components -->
+  <script src="/js/components/UIComponent.js"></script>
+  <script src="/js/components/ToastComponent.js"></script>
+  <script src="/js/components/NavbarComponent.js"></script>
+  <script src="/js/components/HabitCardComponent.js"></script>
+  <script src="/js/components/StatsGridComponent.js"></script>
+  <script src="/js/components/CatalogCardComponent.js"></script>
+  <script src="/js/components/CalendarGridComponent.js"></script>
+  <!-- API Facade & Page Controller -->
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/pages/register_page.js"></script>
+</body>
+</html>
