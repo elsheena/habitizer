@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Integration Tests — Habitizer</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/tests.css">
+</head>
+<body class="sidebar-layout">
+  <div id="navbar-container"></div>
+
+  <main class="page-content">
+    <div class="page-header">
+      <div class="test-runner-hero">
+        <div>
+          <h1>Integration Test Runner</h1>
+          <p>Live stream Go microservice integration tests and verify full end-to-end functionality.</p>
+        </div>
+        <div class="test-status-badge-wrap">
+          <div class="test-timer" id="timer-display">0.0s</div>
+          <button id="run-btn" class="btn btn-primary">
+            <span data-icon="play" data-size="16" id="run-icon"></span>
+            <span id="run-text">Run Integration Tests</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Test Progress Timeline Card -->
+    <div class="card-static card-padded test-timeline-card">
+      <div class="section-header-flex">
+        <h3 class="section-title-sm">Execution Timeline</h3>
+        <span class="badge badge-gray" id="status-badge">Idle</span>
+      </div>
+
+      <div class="timeline-steps">
+        <div class="timeline-step" id="step-1">
+          <div class="step-num">Step 1</div>
+          <div class="step-name">Auth Service</div>
+        </div>
+        <div class="timeline-step" id="step-2">
+          <div class="step-num">Step 2</div>
+          <div class="step-name">Habit CRUD</div>
+        </div>
+        <div class="timeline-step" id="step-3">
+          <div class="step-num">Step 3</div>
+          <div class="step-name">Check-In Logic</div>
+        </div>
+        <div class="timeline-step" id="step-4">
+          <div class="step-num">Step 4</div>
+          <div class="step-name">Freeze Store</div>
+        </div>
+        <div class="timeline-step" id="step-5">
+          <div class="step-num">Step 5</div>
+          <div class="step-name">Gateway Proxy</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terminal Output -->
+    <div class="terminal-card">
+      <div class="terminal-header">
+        <div class="terminal-dots">
+          <div class="terminal-dot red"></div>
+          <div class="terminal-dot yellow"></div>
+          <div class="terminal-dot green"></div>
+        </div>
+        <div class="terminal-title">habitizer-test-runner.log</div>
+        <div>
+          <button id="clear-btn" class="btn btn-secondary btn-sm">Clear</button>
+        </div>
+      </div>
+      <div class="terminal-body" id="terminal">
+        <div class="term-line term-info">Ready to run integration tests. Click the "Run Integration Tests" button above.</div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/icons.js"></script>
+  <!-- Core Layer -->
+  <script src="/js/core/StorageService.js"></script>
+  <script src="/js/core/UserRepository.js"></script>
+  <script src="/js/core/UserStateRepository.js"></script>
+  <script src="/js/core/ThemeManager.js"></script>
+  <!-- Services Layer -->
+  <script src="/js/services/BackendSync.js"></script>
+  <script src="/js/core/AuthService.js"></script>
+  <script src="/js/services/HabitService.js"></script>
+  <script src="/js/services/EconomyService.js"></script>
+  <script src="/js/services/StreakService.js"></script>
+  <script src="/js/services/CatalogService.js"></script>
+  <!-- UI Components -->
+  <script src="/js/components/UIComponent.js"></script>
+  <script src="/js/components/ToastComponent.js"></script>
+  <script src="/js/components/NavbarComponent.js"></script>
+  <script src="/js/components/HabitCardComponent.js"></script>
+  <script src="/js/components/StatsGridComponent.js"></script>
+  <script src="/js/components/CatalogCardComponent.js"></script>
+  <script src="/js/components/CalendarGridComponent.js"></script>
+  <!-- API Facade & Page Controller -->
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/tests.js"></script>
+</body>
+</html>
