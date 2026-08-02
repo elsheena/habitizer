@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Us — Habitizer</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/about.css">
+</head>
+<body class="sidebar-layout">
+  <div id="navbar-container"></div>
+
+  <main class="page-content">
+    <!-- About Us Hero -->
+    <div class="about-hero">
+      <div class="brand-logo-icon about-hero-logo">
+        <span data-icon="logo" data-size="28"></span>
+      </div>
+      <h1 class="about-hero-title">About Habitizer</h1>
+      <p class="about-hero-desc">
+        We believe lasting personal growth is not about fighting yourself with exhausting willpower. It is about understanding how your brain works and gently redirecting old urges into healthy, rewarding routines.
+      </p>
+    </div>
+
+    <!-- Guiding Quotes -->
+    <div class="about-section-wrap">
+      <h2 class="section-title-sm">Our Guiding Philosophy</h2>
+
+      <div class="quote-banner">
+        <div class="quote-banner-text">
+          "We are what we repeatedly do. Excellence, then, is not an act, but a habit."
+        </div>
+        <div class="quote-banner-author">
+          — Aristotle
+        </div>
+      </div>
+
+      <div class="quote-banner">
+        <div class="quote-banner-text">
+          "You cannot erase a bad habit; you can only change it by retaining the old cue and the old reward, while inserting a new routine."
+        </div>
+        <div class="quote-banner-author">
+          — Charles Duhigg, The Power of Habit
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 Core Pillars -->
+    <div class="about-section-wrap">
+      <h2 class="section-title-sm">The 3 Pillars of Habitizer</h2>
+      <div class="pillars-grid">
+        <div class="pillar-card">
+          <div class="pillar-icon">
+            <span data-icon="sparkles" data-size="20"></span>
+          </div>
+          <div class="pillar-title">1. Substitution Over Struggle</div>
+          <p class="pillar-desc">
+            When a craving or stress trigger strikes, do not just say no. Have an easy 5-minute healthy replacement routine ready (water, deep breathing, stretching).
+          </p>
+        </div>
+
+        <div class="pillar-card">
+          <div class="pillar-icon">
+            <span data-icon="snowflake" data-size="20"></span>
+          </div>
+          <div class="pillar-title">2. Forgiveness and Freezes</div>
+          <p class="pillar-desc">
+            Progress is not linear. Our Streak Freeze system protects your record during stressful days so a single slip-up never resets your motivation back to zero.
+          </p>
+        </div>
+
+        <div class="pillar-card">
+          <div class="pillar-icon">
+            <span data-icon="shield" data-size="20"></span>
+          </div>
+          <div class="pillar-title">3. Decoupled Architecture</div>
+          <p class="pillar-desc">
+            Built on lightweight, independent Golang microservices with data isolation and offline support, giving you fast performance anywhere on web or mobile.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="about-section-wrap">
+      <h2 class="section-title-sm">Frequently Asked Questions</h2>
+
+      <div class="faq-list">
+        <div class="card-static card-padded">
+          <h3 class="faq-card-title">
+            How does the Shop and currency work?
+          </h3>
+          <p class="faq-card-desc">
+            Every day you avoid or replace your bad habits, you earn <strong>10 coins</strong>. You can spend them in the Shop to buy extra Streak Freezes or unlock guilt-free leisure screen time passes.
+          </p>
+        </div>
+
+        <div class="card-static card-padded">
+          <h3 class="faq-card-title">
+            What is the difference between Free and Premium plans?
+          </h3>
+          <p class="faq-card-desc">
+            Free users can track up to <strong>3 active habit substitution loops</strong> at a time. Premium users get unlimited habits, advanced habit pattern analytics, and smart Google Calendar sync.
+          </p>
+        </div>
+
+        <div class="card-static card-padded">
+          <h3 class="faq-card-title">
+            Can I use Habitizer on my phone?
+          </h3>
+          <p class="faq-card-desc">
+            Yes. Habitizer is completely mobile-responsive with a touch-friendly navigation bar. You can open it on your phone browser or run the companion Flutter mobile app.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="about-footer-cta">
+      <h3 class="about-footer-title">Ready to replace a habit today?</h3>
+      <div class="about-footer-actions">
+        <a href="/profile#suggested-habits" class="btn btn-secondary btn-sm">Explore Suggested Habits</a>
+        <a href="/create" class="btn btn-primary btn-sm">Create First Habit</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/icons.js"></script>
+  <!-- Core Layer -->
+  <script src="/js/core/StorageService.js"></script>
+  <script src="/js/core/UserRepository.js"></script>
+  <script src="/js/core/UserStateRepository.js"></script>
+  <script src="/js/core/ThemeManager.js"></script>
+  <!-- Services Layer -->
+  <script src="/js/services/BackendSync.js"></script>
+  <script src="/js/core/AuthService.js"></script>
+  <script src="/js/services/HabitService.js"></script>
+  <script src="/js/services/EconomyService.js"></script>
+  <script src="/js/services/StreakService.js"></script>
+  <script src="/js/services/CatalogService.js"></script>
+  <!-- UI Components -->
+  <script src="/js/components/UIComponent.js"></script>
+  <script src="/js/components/ToastComponent.js"></script>
+  <script src="/js/components/NavbarComponent.js"></script>
+  <script src="/js/components/HabitCardComponent.js"></script>
+  <script src="/js/components/StatsGridComponent.js"></script>
+  <script src="/js/components/CatalogCardComponent.js"></script>
+  <script src="/js/components/CalendarGridComponent.js"></script>
+  <!-- API Facade & Page Controller -->
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/pages/about_page.js"></script>
+</body>
+</html>
