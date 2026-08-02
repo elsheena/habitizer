@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop — Habitizer</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/shop.css">
+</head>
+<body class="sidebar-layout">
+  <div id="navbar-container"></div>
+
+  <main class="page-content">
+    <!-- Shop Balance Hero Banner -->
+    <div class="shop-hero-card">
+      <div class="shop-balance-left">
+        <div class="shop-balance-label-row">
+          <span class="shop-coin-badge">●</span>
+          <span class="shop-balance-title">Reward Yourself by Becoming Better</span>
+        </div>
+        <div class="shop-balance-display">
+          <span id="econ-balance">150</span>
+          <span class="shop-balance-unit">Habit Coins</span>
+        </div>
+        <p class="shop-balance-desc">
+          Every time you replace an old urge with a healthier routine, you earn <strong>10 coins</strong>. Treat yourself without guilt, celebrate your daily progress, and protect your clean streaks.
+        </p>
+      </div>
+
+      <div class="shop-metrics-grid">
+        <div class="shop-stat-card">
+          <div class="shop-stat-icon-wrap">
+            <span data-icon="shield" data-size="18"></span>
+          </div>
+          <div>
+            <div class="shop-stat-label">Active Freezes</div>
+            <div class="shop-stat-value stat-val-blue" id="econ-freezes">2 Available</div>
+          </div>
+        </div>
+
+        <div class="shop-stat-card">
+          <div class="shop-stat-icon-wrap shop-stat-icon-indigo">
+            <span data-icon="clock" data-size="18"></span>
+          </div>
+          <div>
+            <div class="shop-stat-label">Leisure Time</div>
+            <div class="shop-stat-value stat-val-blue" id="econ-screentime">45 Mins</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Filter Bar -->
+    <div class="shop-filter-bar" id="shop-filter-bar">
+      <button class="shop-filter-btn active" data-category="all">All Rewards</button>
+      <button class="shop-filter-btn" data-category="protection">Streak Protection</button>
+      <button class="shop-filter-btn" data-category="entertainment">Guilt-Free Time</button>
+      <button class="shop-filter-btn" data-category="wellness">Wellness &amp; Rest</button>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="shop-grid-container" id="shop-items-grid">
+      <!-- 1. Single Freeze -->
+      <div class="shop-item-card" data-category="protection">
+        <div class="shop-card-top-row">
+          <div class="shop-card-icon-box">
+            <span data-icon="snowflake" data-size="22"></span>
+          </div>
+          <span class="shop-card-tag tag-protection">Streak Safety</span>
+        </div>
+        <h3 class="shop-card-title">1x Streak Freeze</h3>
+        <p class="shop-card-desc">
+          Protects your active streak from resetting if you have an unexpected slip-up or emergency.
+        </p>
+        <div class="shop-card-perks">
+          <div class="shop-perk-item">
+            <span data-icon="check" data-size="14" class="stat-val-emerald"></span>
+            <span>Auto-applied during missed check-ins</span>
+          </div>
+          <div class="shop-perk-item">
+            <span data-icon="check" data-size="14" class="stat-val-emerald"></span>
+            <span>Preserves consecutive day multiplier</span>
+          </div>
+        </div>
+        <div class="shop-card-bottom-row">
+          <div class="shop-card-price-group">
+            <span class="shop-card-price-val">50</span>
+            <span class="shop-card-price-unit">Coins</span>
+          </div>
+          <button class="btn btn-primary btn-sm btn-buy-freeze">
+            Buy Freeze
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. 3-Pack Bundle -->
+      <div class="shop-item-card" data-category="protection">
+        <div class="shop-card-top-row">
+          <div class="shop-card-icon-box icon-box-amber">
+            <span data-icon="shield" data-size="22"></span>
+          </div>
+          <span class="shop-card-tag tag-save">Save 30 Coins</span>
+        </div>
+        <h3 class="shop-card-title">3x Streak Freeze Pack</h3>
+        <p class="shop-card-desc">
+          Total peace of mind during travel, stressful work weeks, or heavy family commitments.
+        </p>
+        <div class="shop-card-perks">
+          <div class="shop-perk-item">
+            <span data-icon="check" data-size="14" class="stat-val-emerald"></span>
+            <span>3 safety freezes stored in your account</span>
+          </div>
+          <div class="shop-perk-item">
+            <span data-icon="check" data-size="14" class="stat-val-emerald"></span>
+            <span>20% bundle discount applied</span>
+          </div>
+        </div>
+        <div class="shop-card-bottom-row">
+          <div class="shop-card-price-group">
+            <span class="shop-card-price-val">120</span>
+            <span class="shop-card-price-unit">Coins</span>
+          </div>
+          <button class="btn btn-primary btn-sm btn-buy-bundle">
+            Buy 3-Pack
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. 30-Min Entertainment Pass -->
+      <div class="shop-item-card" data-category="entertainment">
+        <div class="shop-card-top-row">
+          <div class="shop-card-icon-box icon-box-indigo">
+            <span data-icon="sparkles" data-size="22"></span>
+          </div>
+          <span class="shop-card-tag tag-time">30 Minutes</span>
+        </div>
+        <h3 class="shop-card-title">30-Min Guilt-Free Pass</h3>
+        <p class="shop-card-desc">
+          Earned leisure time for gaming, social media browsing, or video entertainment with zero guilt.
+        </p>
+        <div class="shop-card-perks">
+          <div class="shop-perk-item">
+            <span data-icon="check" data-size="14" class="stat-val-emerald"></span>
+            <span>Generates unique leisure claim pass</span>
+          </div>
+          <div class="shop-perk-item">
+            <span data-icon="check" data-size="14" class="stat-val-emerald"></span>
+            <span>Reinforces positive dopamine loop</span>
+          </div>
+        </div>
+        <div class="shop-card-bottom-row">
+          <div class="shop-card-price-group">
+            <span class="shop-card-price-val">60</span>
+            <span class="shop-card-price-unit">Coins</span>
+          </div>
+          <button class="btn btn-primary btn-sm btn-redeem-pass" data-mins="30">
+            Redeem Pass
+          </button>
+        </div>
+      </div>
+
+      <!-- 4. 60-Min Movie / Gaming Pass -->
+      <div class="shop-item-card" data-category="entertainment">
+        <div class="shop-card-top-row">
+          <div class="shop-card-icon-box icon-box-indigo">
+            <span data-icon="play" data-size="22"></span>
+          </div>
+          <span class="shop-card-tag tag-time">60 Minutes</span>
+        </div>
+        <h3 class="shop-card-title">1-Hour Leisure Pass</h3>
+        <p class="shop-card-desc">
+          Full 60-minute streaming, movie, or leisure gaming pass rewarded after clean routine days.
+        </p>
+        <div class="shop-card-perks">
+          <div class="shop-perk-item">
+            <span data-icon="check" data-size="14" class="stat-val-emerald"></span>
+            <span>Full hour of uninterrupted downtime</span>
+          </div>
+          <div class="shop-perk-item">
+            <span data-icon="check" data-size="14" class="stat-val-emerald"></span>
+            <span>Tracks toward monthly self-care goals</span>
+          </div>
+        </div>
+        <div class="shop-card-bottom-row">
+          <div class="shop-card-price-group">
+            <span class="shop-card-price-val">100</span>
+            <span class="shop-card-price-unit">Coins</span>
+          </div>
+          <button class="btn btn-primary btn-sm btn-redeem-pass" data-mins="60">
+            Redeem Pass
+          </button>
+        </div>
+      </div>
+
+      <!-- 5. Sleep-in Morning Pass -->
+      <div class="shop-item-card" data-category="wellness">
+        <div class="shop-card-top-row">
+          <div class="shop-card-icon-box icon-box-emerald">
+            <span data-icon="moon" data-size="22"></span>
+          </div>
+          <span class="shop-card-tag tag-wellness">Rest &amp; Sleep</span>
+        </div>
+        <h3 class="shop-card-title">Weekend Sleep-In Pass</h3>
+        <p class="shop-card-desc">
+          A dedicated rest token to disable early alarm pressures and enjoy a slow, relaxing morning.
+        </p>
+        <div class="shop-card-perks">
+          <div class="shop-perk-item">
+            <span data-icon="check" data-size="14" class="stat-val-emerald"></span>
+            <span>Promotes nervous system recovery</span>
+          </div>
+          <div class="shop-perk-item">
+            <span data-icon="check" data-size="14" class="stat-val-emerald"></span>
+            <span>Mindful restorative celebration</span>
+          </div>
+        </div>
+        <div class="shop-card-bottom-row">
+          <div class="shop-card-price-group">
+            <span class="shop-card-price-val">80</span>
+            <span class="shop-card-price-unit">Coins</span>
+          </div>
+          <button class="btn btn-primary btn-sm btn-redeem-pass" data-mins="90">
+            Redeem Pass
+          </button>
+        </div>
+      </div>
+
+      <!-- 6. Favorite Cheat Treat Token -->
+      <div class="shop-item-card" data-category="wellness">
+        <div class="shop-card-top-row">
+          <div class="shop-card-icon-box icon-box-amber">
+            <span data-icon="plus" data-size="22"></span>
+          </div>
+          <span class="shop-card-tag tag-save">Special Treat</span>
+        </div>
+        <h3 class="shop-card-title">Guilt-Free Treat Token</h3>
+        <p class="shop-card-desc">
+          Enjoy your favorite special snack, specialty coffee, or treat without guilt after achieving streaks.
+        </p>
+        <div class="shop-card-perks">
+          <div class="shop-perk-item">
+            <span data-icon="check" data-size="14" class="stat-val-emerald"></span>
+            <span>Healthy balance over strict deprivation</span>
+          </div>
+          <div class="shop-perk-item">
+            <span data-icon="check" data-size="14" class="stat-val-emerald"></span>
+            <span>Transforms treats into milestone celebrations</span>
+          </div>
+        </div>
+        <div class="shop-card-bottom-row">
+          <div class="shop-card-price-group">
+            <span class="shop-card-price-val">75</span>
+            <span class="shop-card-price-unit">Coins</span>
+          </div>
+          <button class="btn btn-primary btn-sm btn-redeem-pass" data-mins="45">
+            Redeem Token
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- How the Economy Works Explainer Banner -->
+    <div class="economy-explainer-banner">
+      <h2 class="economy-explainer-title">How the Habit Economy Works</h2>
+      <p class="economy-explainer-subtext">
+        The brain craves immediate positive feedback. Habitizer turns your daily willpower into tangible currency:
+      </p>
+
+      <div class="economy-steps-grid">
+        <div class="economy-step-item">
+          <span class="economy-step-badge step-badge-blue">1. Complete Daily Loop</span>
+          <div class="economy-step-heading">Earn +10 Coins Each Night</div>
+          <p class="economy-step-desc">Audit your habits at 21:00. Every avoided bad habit rewards coins directly to your balance.</p>
+        </div>
+
+        <div class="economy-step-item">
+          <span class="economy-step-badge step-badge-amber">2. Protect Your Records</span>
+          <div class="economy-step-heading">Streak Freeze Safety Net</div>
+          <p class="economy-step-desc">Stock up on freezes so stressful days never reset your active streak back to zero.</p>
+        </div>
+
+        <div class="economy-step-item">
+          <span class="economy-step-badge step-badge-emerald">3. Guilt-Free Dopamine</span>
+          <div class="economy-step-heading">Redeem Passes for Free Time</div>
+          <p class="economy-step-desc">Enjoy leisure gaming, streaming, or relaxation passes as earned positive reinforcement.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Reward Pass Modal -->
+  <div id="pass-modal" class="modal-overlay">
+    <div class="modal-card pass-modal-card">
+      <div class="pass-modal-icon-wrap">
+        <span data-icon="sparkles" data-size="28"></span>
+      </div>
+      <h3 class="pass-modal-title">Reward Pass Unlocked!</h3>
+      <p class="pass-modal-desc">
+        Your healthy substitution efforts have earned you guilt-free downtime:
+      </p>
+
+      <div class="pass-code-container">
+        <div class="pass-code-label">Pass Authorization Code</div>
+        <div class="pass-code-display-box" id="pass-code-display">PASS-9A4B7C</div>
+        <div class="pass-code-hint">Authorized via Habitizer Cognitive Economy Engine</div>
+      </div>
+
+      <div class="pass-modal-actions">
+        <button class="btn btn-secondary btn-full" id="btn-copy-pass">Copy Code</button>
+        <button class="btn btn-primary btn-full" id="pass-modal-close">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/icons.js"></script>
+  <!-- Core Layer -->
+  <script src="/js/core/StorageService.js"></script>
+  <script src="/js/core/UserRepository.js"></script>
+  <script src="/js/core/UserStateRepository.js"></script>
+  <script src="/js/core/ThemeManager.js"></script>
+  <!-- Services Layer -->
+  <script src="/js/services/BackendSync.js"></script>
+  <script src="/js/core/AuthService.js"></script>
+  <script src="/js/services/HabitService.js"></script>
+  <script src="/js/services/EconomyService.js"></script>
+  <script src="/js/services/StreakService.js"></script>
+  <script src="/js/services/CatalogService.js"></script>
+  <!-- UI Components -->
+  <script src="/js/components/UIComponent.js"></script>
+  <script src="/js/components/ToastComponent.js"></script>
+  <script src="/js/components/NavbarComponent.js"></script>
+  <script src="/js/components/HabitCardComponent.js"></script>
+  <script src="/js/components/StatsGridComponent.js"></script>
+  <script src="/js/components/CatalogCardComponent.js"></script>
+  <script src="/js/components/CalendarGridComponent.js"></script>
+  <!-- API Facade & Page Controller -->
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/shop.js"></script>
+</body>
+</html>
