@@ -1,0 +1,382 @@
+/**
+ * Habitizer Welcome & Dashboard Stylesheet (index.css)
+ */
+
+.welcome-header-box {
+  text-align: center;
+  margin: 1.5rem auto 2.5rem auto;
+  max-width: 850px;
+}
+
+.welcome-title-lg {
+  font-size: 2.6rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.welcome-desc-lg {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.quotes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .quotes-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.quote-box {
+  background: var(--bg-surface);
+  border-left: 4px solid var(--blue-primary);
+  border-top: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+}
+
+.quote-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.quote-author {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--blue-primary);
+  margin-top: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Habit Substitution Loop Visualizer */
+.habit-loop-banner {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.loop-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 860px) {
+  .loop-steps-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 500px) {
+  .loop-steps-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.loop-node {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.loop-node-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  width: fit-content;
+  border: 1px solid var(--border-subtle);
+}
+
+.loop-node-1 .loop-node-badge { background: var(--amber-subtle); color: var(--amber-primary); }
+.loop-node-2 .loop-node-badge { background: var(--rose-subtle); color: var(--rose-primary); }
+.loop-node-3 .loop-node-badge { background: var(--blue-subtle); color: var(--blue-primary); }
+.loop-node-4 .loop-node-badge { background: var(--indigo-subtle); color: var(--indigo-primary); }
+
+.loop-node-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.loop-node-desc {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* Habits List Grid */
+.habits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.habit-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.habit-card:hover {
+  border-color: var(--blue-primary);
+}
+
+.habit-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.habit-category-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--blue-primary);
+  background: var(--blue-subtle);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.habit-card-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  margin-top: 0.25rem;
+}
+
+.habit-loop-mapping {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem;
+  font-size: 0.8rem;
+}
+
+.mapping-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.mapping-key {
+  font-weight: 800;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.mapping-val {
+  font-weight: 600;
+}
+
+.mapping-substitute-highlight {
+  color: var(--emerald-primary);
+}
+
+.mapping-reward-highlight {
+  color: var(--indigo-primary);
+}
+
+.habit-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.dashboard-empty-card {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem;
+}
+
+.dashboard-empty-desc {
+  color: var(--text-secondary);
+  margin: 0.5rem 0 1.5rem 0;
+}
+
+/* Bottom Motivation & Guide Split Card */
+.motivation-split-card {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 2.25rem 2rem;
+  margin-top: 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.motivation-split-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--blue-primary);
+}
+
+.motivation-split-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 2rem;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 860px) {
+  .motivation-split-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.motivation-speech-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.motivation-badge-tag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--blue-primary);
+  background: var(--blue-subtle);
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  width: fit-content;
+}
+
+.motivation-split-title {
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--text-primary);
+}
+
+.motivation-speech-text {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+.motivation-speech-highlight {
+  background: var(--bg-primary);
+  border-left: 3px solid var(--amber-primary);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* Right Guide Column */
+.motivation-guide-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.motivation-guide-header {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.motivation-step-box {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.motivation-step-num {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.step-num-1 { background: var(--amber-subtle); color: var(--amber-primary); }
+.step-num-2 { background: var(--rose-subtle); color: var(--rose-primary); }
+.step-num-3 { background: var(--blue-subtle); color: var(--blue-primary); }
+.step-num-4 { background: var(--emerald-subtle); color: var(--emerald-primary); }
+
+.motivation-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.motivation-step-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.motivation-step-desc {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Bottom CTA Actions */
+.motivation-cta-actions {
+  display: flex;
+  gap: 0.85rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 1.5rem;
+}
+
+.section-header-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
