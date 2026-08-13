@@ -1,0 +1,326 @@
+/**
+ * Habitizer Profile Page Stylesheet (profile.css)
+ */
+
+.profile-grid-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  align-items: flex-start;
+  margin-bottom: 2.5rem;
+}
+
+@media (max-width: 860px) {
+  .profile-grid-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.profile-card-center {
+  text-align: center;
+}
+
+.profile-avatar-large {
+  width: 64px;
+  height: 64px;
+  font-size: 1.5rem;
+  margin: 0 auto 0.75rem auto;
+}
+
+.profile-user-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.profile-user-email {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  margin-bottom: 0.5rem;
+}
+
+.profile-badge-wrap {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+}
+
+.profile-details-list {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 1rem;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.profile-detail-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.profile-mono-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+}
+
+.profile-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 600px) {
+  .profile-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.profile-metric-tile {
+  background: var(--bg-primary);
+  padding: 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  text-align: center;
+}
+
+.profile-metric-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.profile-metric-val {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.profile-progress-wrap {
+  height: 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.profile-progress-fill {
+  height: 100%;
+  background: var(--blue-primary);
+  transition: width 0.4s ease;
+}
+
+.profile-integrations-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.integration-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.integration-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--blue-subtle);
+  color: var(--blue-primary);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.integration-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.integration-action-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
+.integration-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.integration-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+/* Tier Badges */
+.tier-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.04em;
+  border: 1px solid var(--border-subtle);
+}
+
+.tier-free { background: var(--bg-surface); color: var(--text-secondary); }
+.tier-premium { background: var(--amber-subtle); color: var(--amber-primary); border-color: var(--amber-primary); }
+
+/* Quick Checkin Banner */
+.quick-checkin-banner {
+  background: var(--bg-surface);
+  border-left: 4px solid var(--blue-primary);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.quick-checkin-content-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.quick-checkin-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--blue-subtle);
+  color: var(--blue-primary);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-checkin-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.quick-checkin-desc {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.profile-toggle-btn {
+  margin-top: 1.25rem;
+}
+
+.section-title-sm {
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+
+.section-title-md {
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.section-desc-sm {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.progress-bar-label-flex {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.suggested-habits-container {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 2rem;
+}
+
+.suggested-habits-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.catalog-filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: all var(--transition-fast);
+}
+
+.filter-btn:hover, .filter-btn.active {
+  background: var(--blue-subtle);
+  color: var(--blue-primary);
+  border-color: var(--blue-primary);
+}
+
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.catalog-card {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.catalog-card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.catalog-card-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background: var(--blue-subtle);
+  color: var(--blue-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-subtle);
+}
+
+.catalog-card-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin-top: 0.25rem;
+}
+
+.catalog-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.catalog-card-action-wrapper {
+  margin-top: auto;
+  padding-top: 0.65rem;
+}
