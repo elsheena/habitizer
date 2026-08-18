@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nightly Check-In — Habitizer</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/pages.css">
+</head>
+<body class="sidebar-layout">
+  <div id="navbar-container"></div>
+
+  <main class="page-content">
+    <div class="page-header">
+      <h1>Nightly Habit Check-In (21:00 Audit)</h1>
+      <p>Reflect on today's triggers, record substitutions or relapses, and preserve your active streak.</p>
+    </div>
+
+    <!-- Check-In Wizard Card -->
+    <div class="checkin-wizard-card">
+      <div class="checkin-header-row">
+        <div class="checkin-header-group">
+          <span data-icon="clock" data-size="20" class="checkin-icon-indigo"></span>
+          <span class="checkin-header-title">Evening Reflection</span>
+        </div>
+        <span class="badge badge-running" id="checkin-date-badge">Today: Aug 28, 2026</span>
+      </div>
+
+      <form id="checkin-form">
+        <!-- Step 1: Select Habit -->
+        <div class="form-group form-step-section">
+          <label class="form-label" for="checkin-habit-select">Which habit substitution are you logging?</label>
+          <select class="form-input" id="checkin-habit-select">
+            <!-- Injected via checkin.js -->
+          </select>
+        </div>
+
+        <!-- Step 2: Binary Outcome Selection -->
+        <div class="checkin-question">Did you avoid the bad habit today?</div>
+        <div class="checkin-options">
+          <button type="button" class="checkin-option-btn" id="btn-choice-clean">
+            <span data-icon="shield" data-size="28" class="stat-val-blue"></span>
+            <span class="checkin-option-title-emerald">Yes, Avoided / Substituted</span>
+            <span class="checkin-option-subtext">Clean day! Earn +10 coins &amp; extend streak</span>
+          </button>
+
+          <button type="button" class="checkin-option-btn" id="btn-choice-relapse">
+            <span data-icon="snowflake" data-size="28" class="stat-val-rose"></span>
+            <span class="checkin-option-title-rose">I Had a Relapse</span>
+            <span class="checkin-option-subtext">Streak Freeze will auto-protect your record</span>
+          </button>
+        </div>
+
+        <!-- Dynamic Replacement Routine Input (Shown when Clean chosen) -->
+        <div id="replacement-followup" class="card-static card-padded checkin-followup-card hidden-control">
+          <div class="form-group">
+            <label class="form-label" for="custom-routine-note">Did you use a specific or custom replacement routine today?</label>
+            <input class="form-input" type="text" id="custom-routine-note" placeholder="e.g. Chamomile tea & breathing, or 10 min walk">
+            <span class="form-helper-text">Repeating custom routines trigger auto-promotion into official habits.</span>
+          </div>
+        </div>
+
+        <div class="form-actions-footer">
+          <a href="/" class="btn btn-secondary">Back to Dashboard</a>
+          <button type="submit" class="btn btn-primary" id="btn-submit-checkin" disabled>
+            Confirm Nightly Check-In
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Auto-Promotion Modal Simulation -->
+    <div id="promotion-modal" class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title promo-modal-title">Pattern Detected: Auto-Promotion!</h3>
+          <button class="modal-close-btn" id="promo-modal-close">&times;</button>
+        </div>
+        <p class="promo-modal-desc">
+          Our engine noticed you used <strong>"<span id="promo-routine-name">Chamomile Tea Routine</span>"</strong> during 3 consecutive evenings to avoid junk food snacking.
+        </p>
+        <div class="card-static card-padded promo-preview-box">
+          <div class="promo-label">Proposed Official Substitution:</div>
+          <div class="promo-habit-text">
+            Bad Habit: Late Night Snacking ➔ Routine: Chamomile Tea &amp; Deep Breathing
+          </div>
+        </div>
+        <div class="promo-actions-row">
+          <button class="btn btn-secondary" id="promo-btn-dismiss">Keep as Custom Note</button>
+          <button class="btn btn-primary" id="promo-btn-accept">Accept &amp; Promote to Official Habit</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/icons.js"></script>
+  <!-- Core Layer -->
+  <script src="/js/core/StorageService.js"></script>
+  <script src="/js/core/UserRepository.js"></script>
+  <script src="/js/core/UserStateRepository.js"></script>
+  <script src="/js/core/ThemeManager.js"></script>
+  <!-- Services Layer -->
+  <script src="/js/services/BackendSync.js"></script>
+  <script src="/js/core/AuthService.js"></script>
+  <script src="/js/services/HabitService.js"></script>
+  <script src="/js/services/EconomyService.js"></script>
+  <script src="/js/services/StreakService.js"></script>
+  <script src="/js/services/CatalogService.js"></script>
+  <!-- UI Components -->
+  <script src="/js/components/UIComponent.js"></script>
+  <script src="/js/components/ToastComponent.js"></script>
+  <script src="/js/components/NavbarComponent.js"></script>
+  <script src="/js/components/HabitCardComponent.js"></script>
+  <script src="/js/components/StatsGridComponent.js"></script>
+  <script src="/js/components/CatalogCardComponent.js"></script>
+  <script src="/js/components/CalendarGridComponent.js"></script>
+  <!-- API Facade & Page Controller -->
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/checkin.js"></script>
+</body>
+</html>

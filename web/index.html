@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Habitizer — Habit Substitution</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/index.css">
+</head>
+<body class="sidebar-layout">
+  <div id="navbar-container"></div>
+
+  <main class="page-content">
+    <!-- Welcome Header -->
+    <div class="page-header welcome-header-box">
+      <h1 class="welcome-title-lg">
+        Welcome to Habitizer
+      </h1>
+      <p class="welcome-desc-lg">
+        A simple, friendly way to replace unwanted habits with positive, healthy daily routines.
+      </p>
+    </div>
+
+    <!-- Inspirational Quotes Section -->
+    <div class="quotes-grid">
+      <div class="quote-box">
+        <div class="quote-text">
+          "We are what we repeatedly do. Excellence, then, is not an act, but a habit."
+        </div>
+        <div class="quote-author">— Aristotle</div>
+      </div>
+
+      <div class="quote-box">
+        <div class="quote-text">
+          "You cannot erase a bad habit; you can only change it by retaining the old cue and reward, while inserting a new routine."
+        </div>
+        <div class="quote-author">— Charles Duhigg, The Power of Habit</div>
+      </div>
+    </div>
+
+    <!-- Simple Habit Loop Principle -->
+    <div class="habit-loop-banner">
+      <h2 class="loop-node-title">How Habit Substitution Works</h2>
+      <p class="loop-node-desc">
+        Instead of using pure willpower to stop a habit, keep the trigger and reward, and switch the middle routine:
+      </p>
+
+      <div class="loop-steps-grid">
+        <div class="loop-node loop-node-1">
+          <span class="loop-node-badge">1. The Cue (Trigger)</span>
+          <div class="loop-node-title">Stress, Boredom, or Time</div>
+          <div class="loop-node-desc">The feeling or moment that sparks the urge.</div>
+        </div>
+        <div class="loop-node loop-node-2">
+          <span class="loop-node-badge">2. Bad Habit</span>
+          <div class="loop-node-title">Old Unwanted Routine</div>
+          <div class="loop-node-desc">Snacking, late-night scrolling, biting nails.</div>
+        </div>
+        <div class="loop-node loop-node-3">
+          <span class="loop-node-badge">3. New Routine</span>
+          <div class="loop-node-title">Healthy Replacement</div>
+          <div class="loop-node-desc">Deep breathing, drinking water, reading 5 pages.</div>
+        </div>
+        <div class="loop-node loop-node-4">
+          <span class="loop-node-badge">4. Reward</span>
+          <div class="loop-node-title">Coins &amp; Free Time</div>
+          <div class="loop-node-desc">Earn coins for the shop and feel good.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Habits List (Authenticated Only) -->
+    <div id="auth-habits-section">
+      <div class="section-header-flex">
+        <h2 class="welcome-title-sm">My Active Habits</h2>
+        <a href="/profile#suggested-habits" class="btn btn-secondary btn-sm">Explore Suggested Habits</a>
+      </div>
+
+      <div class="habits-grid" id="habits-list-container">
+        <!-- Injected via HabitCardComponent in index.js -->
+      </div>
+    </div>
+
+    <!-- Motivational & Creation Guide Split Card -->
+    <div class="motivation-split-card">
+      <div class="motivation-split-grid">
+        <!-- Left: Motivational Speech -->
+        <div class="motivation-speech-col">
+          <span class="motivation-badge-tag">Break the Illusion</span>
+          <h2 class="motivation-split-title">Don't Wait for "Tomorrow" — Start Becoming the New You Right Now</h2>
+          <p class="motivation-speech-text">
+            The most common trap in personal growth is telling yourself <em>"I'll start tomorrow."</em> Tomorrow never comes — change happens in the present moment. You don't need exhausting willpower or an overwhelming life overhaul.
+          </p>
+          <div class="motivation-speech-highlight">
+            "Real progress begins by interrupting just one trigger today with a 5-minute healthy substitute. Replace one unwanted routine right now, and let momentum build."
+          </div>
+        </div>
+
+        <!-- Right: How to Add a Habit Loop Guide -->
+        <div class="motivation-guide-col">
+          <h3 class="motivation-guide-header">How to Build Your Substitution Loop</h3>
+
+          <div class="motivation-step-box">
+            <span class="motivation-step-num step-num-1">Step 1</span>
+            <div class="motivation-step-content">
+              <div class="motivation-step-title">Identify the Trigger (Cue)</div>
+              <div class="motivation-step-desc">Pinpoint the emotional urge, time of day, or environment (e.g. 10 PM stress or boredom).</div>
+            </div>
+          </div>
+
+          <div class="motivation-step-box">
+            <span class="motivation-step-num step-num-2">Step 2</span>
+            <div class="motivation-step-content">
+              <div class="motivation-step-title">Name the Bad Habit</div>
+              <div class="motivation-step-desc">The repetitive unwanted coping behavior you want to replace (e.g. late-night junk snacking).</div>
+            </div>
+          </div>
+
+          <div class="motivation-step-box">
+            <span class="motivation-step-num step-num-3">Step 3</span>
+            <div class="motivation-step-content">
+              <div class="motivation-step-title">Choose Healthy Replacement</div>
+              <div class="motivation-step-desc">A quick 5-minute restorative routine (e.g. hot chamomile tea, deep breathing, stretching).</div>
+            </div>
+          </div>
+
+          <div class="motivation-step-box">
+            <span class="motivation-step-num step-num-4">Step 4</span>
+            <div class="motivation-step-content">
+              <div class="motivation-step-title">Set Dopamine Reward</div>
+              <div class="motivation-step-desc">Earn +10 shop coins and preserve your clean streak records each evening.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Action Buttons -->
+      <div class="motivation-cta-actions">
+        <a href="/create" class="btn btn-primary">
+          <span data-icon="plus" data-size="16"></span> Build Your Habit Loop Now
+        </a>
+        <a href="/profile#suggested-habits" class="btn btn-secondary">
+          Explore Evidence-Based Routines
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/icons.js"></script>
+  <!-- Core Layer -->
+  <script src="/js/core/StorageService.js"></script>
+  <script src="/js/core/UserRepository.js"></script>
+  <script src="/js/core/UserStateRepository.js"></script>
+  <script src="/js/core/ThemeManager.js"></script>
+  <!-- Services Layer -->
+  <script src="/js/services/BackendSync.js"></script>
+  <script src="/js/core/AuthService.js"></script>
+  <script src="/js/services/HabitService.js"></script>
+  <script src="/js/services/EconomyService.js"></script>
+  <script src="/js/services/StreakService.js"></script>
+  <script src="/js/services/CatalogService.js"></script>
+  <!-- UI Components -->
+  <script src="/js/components/UIComponent.js"></script>
+  <script src="/js/components/ToastComponent.js"></script>
+  <script src="/js/components/NavbarComponent.js"></script>
+  <script src="/js/components/HabitCardComponent.js"></script>
+  <script src="/js/components/StatsGridComponent.js"></script>
+  <script src="/js/components/CatalogCardComponent.js"></script>
+  <script src="/js/components/CalendarGridComponent.js"></script>
+  <!-- API Facade & Page Controller -->
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/index.js"></script>
+</body>
+</html>

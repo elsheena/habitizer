@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Habit Calendar — Habitizer</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/calendar.css">
+</head>
+<body class="sidebar-layout">
+  <div id="navbar-container"></div>
+
+  <main class="page-content">
+    <!-- Calendar Card -->
+    <div class="calendar-card">
+      <div class="calendar-toolbar">
+        <div class="calendar-title-group">
+          <button class="calendar-nav-btn" id="cal-prev-btn" aria-label="Previous Month">◀</button>
+          <span class="calendar-month-title" id="cal-month-title">August 2026</span>
+          <button class="calendar-nav-btn" id="cal-next-btn" aria-label="Next Month">▶</button>
+        </div>
+
+        <div class="view-btn-group">
+          <button class="view-btn active" data-view="month">Month</button>
+          <button class="view-btn" data-view="week">Week</button>
+          <button class="view-btn" data-view="3day">3-Day</button>
+          <button class="view-btn" data-view="day">Day</button>
+        </div>
+
+        <div class="calendar-header-actions">
+          <a href="/checkin" class="btn btn-secondary btn-sm">
+            <span data-icon="checkin" data-size="16"></span> Quick Check-In
+          </a>
+          <a href="/create" class="btn btn-primary btn-sm">
+            <span data-icon="plus" data-size="16"></span> Add Routine
+          </a>
+        </div>
+      </div>
+
+      <div id="calendar-view-container">
+        <!-- Injected via CalendarGridComponent in calendar.js -->
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="card-static card-padded legend-card">
+      <div class="legend-item">
+        <span class="legend-dot legend-dot-emerald"></span>
+        <span>Substituted Healthy Routine</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot legend-dot-amber"></span>
+        <span>Streak Freeze Protected</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot legend-dot-indigo"></span>
+        <span>Scheduled Alert Time</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- Habit Details Modal -->
+  <div id="calendar-detail-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-habit-date">Habit Details</h3>
+        <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+      </div>
+      <div id="modal-habit-content" class="modal-content-list">
+        <!-- Injected dynamically via CalendarGridComponent -->
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/icons.js"></script>
+  <!-- Core Layer -->
+  <script src="/js/core/StorageService.js"></script>
+  <script src="/js/core/UserRepository.js"></script>
+  <script src="/js/core/UserStateRepository.js"></script>
+  <script src="/js/core/ThemeManager.js"></script>
+  <!-- Services Layer -->
+  <script src="/js/services/BackendSync.js"></script>
+  <script src="/js/core/AuthService.js"></script>
+  <script src="/js/services/HabitService.js"></script>
+  <script src="/js/services/EconomyService.js"></script>
+  <script src="/js/services/StreakService.js"></script>
+  <script src="/js/services/CatalogService.js"></script>
+  <!-- UI Components -->
+  <script src="/js/components/UIComponent.js"></script>
+  <script src="/js/components/ToastComponent.js"></script>
+  <script src="/js/components/NavbarComponent.js"></script>
+  <script src="/js/components/HabitCardComponent.js"></script>
+  <script src="/js/components/StatsGridComponent.js"></script>
+  <script src="/js/components/CatalogCardComponent.js"></script>
+  <script src="/js/components/CalendarGridComponent.js"></script>
+  <!-- API Facade & Page Controller -->
+  <script src="/js/api.js"></script>
+  <script src="/js/sidebar.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/calendar.js"></script>
+</body>
+</html>
