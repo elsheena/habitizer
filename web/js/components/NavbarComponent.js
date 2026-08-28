@@ -31,7 +31,9 @@ class NavbarComponent extends UIComponent {
     // Navigation Menu items definition
     let navItems;
     if (isAuthPage || !isLoggedIn) {
-      navItems = [{ id: 'about', label: 'About Us', icon: 'faq', href: '/about' }];
+      navItems = [
+        { id: 'about', label: 'About Us', icon: 'faq', href: '/about' }
+      ];
     } else {
       navItems = [
         { id: 'calendar', label: 'Calendar', icon: 'calendar', href: '/calendar' },
@@ -54,8 +56,8 @@ class NavbarComponent extends UIComponent {
       children: [brandLogoDiv, brandTextGroup]
     });
 
-    // 2. 1400px Grid Container
-    // 2a. Nav Left (Profile Pill)
+    // 2. Grid Container
+    // 2a. Nav Left (Profile Pill or Log In pill)
     const navLeft = this.createElement('div', { className: 'nav-left' });
     if (isLoggedIn) {
       const avatarCircle = this.createElement('div', {
@@ -73,6 +75,16 @@ class NavbarComponent extends UIComponent {
         children: [avatarCircle, nameLabel]
       });
       navLeft.appendChild(profilePill);
+    } else if (!isAuthPage) {
+      const homeLink = this.createElement('a', {
+        className: ['nav-link', activePageId === 'welcome' ? 'active' : ''],
+        attrs: { href: '/' },
+        children: [
+          this.createElement('span', { attrs: { 'data-icon': 'logo', 'data-size': '16' } }),
+          this.createElement('span', { text: 'Home' })
+        ]
+      });
+      navLeft.appendChild(homeLink);
     }
 
     // 2b. Nav Center (Menu Links + Mobile Extras)
@@ -81,7 +93,7 @@ class NavbarComponent extends UIComponent {
       className: 'nav-center'
     });
 
-    // Mobile Profile Row (Inside dropdown)
+    // Mobile Top Row in Dropdown
     if (isLoggedIn) {
       const mobileAvatar = this.createElement('div', {
         className: 'user-avatar-circle',
@@ -96,6 +108,15 @@ class NavbarComponent extends UIComponent {
         children: [mobileAvatar, mobileName]
       });
       navCenter.appendChild(mobileProfileLink);
+    } else {
+      const mobileHomeIcon = this.createElement('span', { attrs: { 'data-icon': 'logo', 'data-size': '16' } });
+      const mobileHomeText = this.createElement('span', { text: 'Home' });
+      const mobileHomeLink = this.createElement('a', {
+        className: ['nav-link', 'mobile-only-link', activePageId === 'welcome' ? 'active' : ''],
+        attrs: { href: '/' },
+        children: [mobileHomeIcon, mobileHomeText]
+      });
+      navCenter.appendChild(mobileHomeLink);
     }
 
     // Standard Nav Links
@@ -111,7 +132,7 @@ class NavbarComponent extends UIComponent {
       navCenter.appendChild(link);
     });
 
-    // Mobile Logout Button (Inside dropdown)
+    // Mobile Auth Actions in Dropdown (Log In / Register or Log Out)
     if (isLoggedIn) {
       const mobileExitIcon = this.createElement('span', { attrs: { 'data-icon': 'exit', 'data-size': '16' } });
       const mobileLogoutText = this.createElement('span', { text: 'Log Out' });
@@ -130,9 +151,31 @@ class NavbarComponent extends UIComponent {
         }
       });
       navCenter.appendChild(mobileLogoutLink);
+    } else {
+      // Mobile Login Link
+      const mobileLoginIcon = this.createElement('span', { attrs: { 'data-icon': 'user', 'data-size': '16' } });
+      const mobileLoginText = this.createElement('span', { text: 'Log In' });
+      const mobileLoginLink = this.createElement('a', {
+        id: 'mobile-nav-login',
+        className: ['nav-link', 'mobile-only-link', activePageId === 'login' ? 'active' : ''],
+        attrs: { href: '/login' },
+        children: [mobileLoginIcon, mobileLoginText]
+      });
+      navCenter.appendChild(mobileLoginLink);
+
+      // Mobile Register Link
+      const mobileRegIcon = this.createElement('span', { attrs: { 'data-icon': 'plus', 'data-size': '16' } });
+      const mobileRegText = this.createElement('span', { text: 'Create Account' });
+      const mobileRegLink = this.createElement('a', {
+        id: 'mobile-nav-register',
+        className: ['nav-link', 'mobile-only-link', activePageId === 'register' ? 'active' : ''],
+        attrs: { href: '/register' },
+        children: [mobileRegIcon, mobileRegText]
+      });
+      navCenter.appendChild(mobileRegLink);
     }
 
-    // 2c. Nav Right (New Habit CTA + Mobile Toggle)
+    // 2c. Nav Right (New Habit CTA or Login Button + Mobile Toggle)
     const navRight = this.createElement('div', { className: 'nav-right' });
     if (isLoggedIn) {
       const plusIcon = this.createElement('span', { attrs: { 'data-icon': 'plus', 'data-size': '16' } });
@@ -143,6 +186,16 @@ class NavbarComponent extends UIComponent {
         children: [plusIcon, addText]
       });
       navRight.appendChild(addHabitBtn);
+    } else if (!isAuthPage) {
+      const loginBtn = this.createElement('a', {
+        className: 'btn-add-habit-nav',
+        attrs: { href: '/login', title: 'Sign In to Habitizer' },
+        children: [
+          this.createElement('span', { attrs: { 'data-icon': 'user', 'data-size': '16' } }),
+          this.createElement('span', { text: 'Log In' })
+        ]
+      });
+      navRight.appendChild(loginBtn);
     }
 
     const mobileToggleBtn = this.createElement('button', {
