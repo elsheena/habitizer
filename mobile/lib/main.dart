@@ -7,25 +7,27 @@ import 'screens/calendar_screen.dart';
 import 'screens/shop_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/create_habit_screen.dart';
-import 'screens/checkin_screen.dart';
 
 void main() {
-  runApp(const HabitizerMobileApp());
+  runApp(const HabitizerApp());
 }
 
-class HabitizerMobileApp extends StatefulWidget {
-  const HabitizerMobileApp({super.key});
+class HabitizerApp extends StatefulWidget {
+  const HabitizerApp({Key? key}) : super(key: key);
+
+  static _HabitizerAppState? of(BuildContext context) =>
+      context.findAncestorStateOfType<_HabitizerAppState>();
 
   @override
-  State<HabitizerMobileApp> createState() => _HabitizerMobileAppState();
+  State<HabitizerApp> createState() => _HabitizerAppState();
 }
 
-class _HabitizerMobileAppState extends State<HabitizerMobileApp> {
-  bool isDark = false;
+class _HabitizerAppState extends State<HabitizerApp> {
+  ThemeMode _themeMode = ThemeMode.dark;
 
   void toggleTheme() {
     setState(() {
-      isDark = !isDark;
+      _themeMode = _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     });
   }
 
@@ -36,28 +38,27 @@ class _HabitizerMobileAppState extends State<HabitizerMobileApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
-      home: MainNavigationShell(onToggleTheme: toggleTheme, isDark: isDark),
+      themeMode: _themeMode,
+      home: const MainNavigationScreen(),
     );
   }
 }
 
-class MainNavigationShell extends StatefulWidget {
-  final VoidCallback onToggleTheme;
-  final bool isDark;
-
-  const MainNavigationShell({
-    super.key,
-    required this.onToggleTheme,
-    required this.isDark,
-  });
+class MainNavigationScreen extends StatefulWidget {
+  const MainNavigationScreen({Key? key}) : super(key: key);
 
   @override
-  State<MainNavigationShell> createState() => _MainNavigationShellState();
+  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
-class _MainNavigationShellState extends State<MainNavigationShell> {
+class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
+
+  void _onNavigateTab(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,27 +72,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
     final screens = [
       DashboardScreen(
-        onOpenCreate: () async {
-          await Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const CreateHabitScreen()),
-          );
-          setState(() {});
-        },
-        onOpenCheckIn: () async {
-          await Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const CheckInScreen()),
-          );
-          setState(() {});
-        },
+        onNavigateTab: _onNavigateTab,
       ),
       const CalendarScreen(),
       const ShopScreen(),
-      ProfileScreen(
-        onLogout: () {
-          ApiService.logout();
-          setState(() {});
-        },
-      ),
+      const ProfileScreen(),
     ];
 
     return Scaffold(
@@ -126,7 +111,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           ? FloatingActionButton(
               onPressed: () async {
                 await Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const CreateHabitScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => CreateHabitScreen(onNavigateTab: _onNavigateTab),
+                  ),
                 );
                 setState(() {});
               },

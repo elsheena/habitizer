@@ -94,7 +94,7 @@ class _CreateHabitScreenState extends State<CreateHabitScreen> {
             const SizedBox(height: 24),
 
             ElevatedButton(
-              style: ElevatedButton.styleButtonKey != null ? null : ElevatedButton.styleFrom(
+              style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

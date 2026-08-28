@@ -117,12 +117,12 @@ class _CheckInScreenState extends State<CheckInScreen> {
                               width: 2,
                             ),
                           ),
-                          child: const Column(
+                          child: Column(
                             children: [
-                              Icon(Icons.shield_outlined, color: AppTheme.emeraldPrimary, size: 32),
-                              SizedBox(height: 8),
-                              Text('Yes, Avoided', style: TextStyle(fontWeight: FontWeight.w800, color: AppTheme.emeraldPrimary)),
-                              SizedBox(height: 4),
+                              const Icon(Icons.shield_outlined, color: AppTheme.emeraldPrimary, size: 32),
+                              const SizedBox(height: 8),
+                              const Text('Yes, Avoided', style: TextStyle(fontWeight: FontWeight.w800, color: AppTheme.emeraldPrimary)),
+                              const SizedBox(height: 4),
                               Text('+10 Coins', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
                             ],
                           ),
@@ -144,12 +144,12 @@ class _CheckInScreenState extends State<CheckInScreen> {
                               width: 2,
                             ),
                           ),
-                          child: const Column(
+                          child: Column(
                             children: [
-                              Icon(Icons.ac_unit, color: AppTheme.rosePrimary, size: 32),
-                              SizedBox(height: 8),
-                              Text('Had Relapse', style: TextStyle(fontWeight: FontWeight.w800, color: AppTheme.rosePrimary)),
-                              SizedBox(height: 4),
+                              const Icon(Icons.ac_unit, color: AppTheme.rosePrimary, size: 32),
+                              const SizedBox(height: 8),
+                              const Text('Had Relapse', style: TextStyle(fontWeight: FontWeight.w800, color: AppTheme.rosePrimary)),
+                              const SizedBox(height: 4),
                               Text('Freeze Protected', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
                             ],
                           ),

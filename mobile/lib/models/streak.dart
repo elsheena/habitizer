@@ -1,9 +1,9 @@
 class StreakInfo {
-  final int currentStreak;
-  final int longestStreak;
-  final int totalSubstitutions;
-  final int totalRelapses;
-  final String successRate;
+  int currentStreak;
+  int longestStreak;
+  int totalSubstitutions;
+  int totalRelapses;
+  String successRate;
 
   StreakInfo({
     required this.currentStreak,
