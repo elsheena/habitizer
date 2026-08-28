@@ -4,51 +4,7 @@
  * Modern, crisp design with responsive viewport alignment.
  */
 
-:root {
-  /* Flat Light Palette */
-  --bg-primary: #f8fafc;
-  --bg-secondary: #ffffff;
-  --bg-surface: #f1f5f9;
-  --bg-surface-elevated: #e2e8f0;
-
-  --border-subtle: #cbd5e1;
-  --border-strong: #94a3b8;
-
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-
-  --blue-primary: #0284c7;
-  --blue-hover: #0369a1;
-  --blue-subtle: #e0f2fe;
-
-  --emerald-primary: #059669;
-  --emerald-hover: #047857;
-  --emerald-subtle: #d1fae5;
-
-  --indigo-primary: #4f46e5;
-  --indigo-hover: #4338ca;
-  --indigo-subtle: #e0e7ff;
-
-  --amber-primary: #d97706;
-  --amber-hover: #b45309;
-  --amber-subtle: #fef3c7;
-
-  --rose-primary: #e11d48;
-  --rose-hover: #be123c;
-  --rose-subtle: #ffe4e6;
-
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-full: 9999px;
-
-  --transition-fast: 0.15s ease;
-  --transition-normal: 0.25s ease;
-}
-
-[data-theme="dark"] {
+:root, [data-theme="dark"] {
   /* Flat Softer Dark Palette (Zero Gradients, Lighter Slate) */
   --bg-primary: #1e293b;
   --bg-secondary: #273549;
@@ -81,6 +37,50 @@
   --rose-primary: #fb7185;
   --rose-hover: #f43f5e;
   --rose-subtle: rgba(251, 113, 133, 0.2);
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+}
+
+[data-theme="light"] {
+  /* Flat Light Palette */
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-surface: #f1f5f9;
+  --bg-surface-elevated: #e2e8f0;
+
+  --border-subtle: #cbd5e1;
+  --border-strong: #94a3b8;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+
+  --blue-primary: #0284c7;
+  --blue-hover: #0369a1;
+  --blue-subtle: #e0f2fe;
+
+  --emerald-primary: #059669;
+  --emerald-hover: #047857;
+  --emerald-subtle: #d1fae5;
+
+  --indigo-primary: #4f46e5;
+  --indigo-hover: #4338ca;
+  --indigo-subtle: #e0e7ff;
+
+  --amber-primary: #d97706;
+  --amber-hover: #b45309;
+  --amber-subtle: #fef3c7;
+
+  --rose-primary: #e11d48;
+  --rose-hover: #be123c;
+  --rose-subtle: #ffe4e6;
 }
 
 /* Global Reset */
@@ -115,7 +115,87 @@ button {
 
 input, select, textarea {
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: inherit;
+}
+
+/* Global Form Controls (Habitizer Design System) */
+.form-group {
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.45rem;
+  letter-spacing: -0.01em;
+}
+
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  background-color: var(--bg-surface-elevated);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  font-size: 0.92rem;
+  font-family: inherit;
+  outline: none;
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--blue-primary);
+  background-color: var(--bg-surface);
+  box-shadow: 0 0 0 3px var(--blue-subtle);
+}
+
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] .form-textarea {
+  background-color: var(--bg-surface-elevated);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-input:focus,
+[data-theme="dark"] .form-select:focus,
+[data-theme="dark"] .form-textarea:focus {
+  background-color: var(--bg-secondary);
+  border-color: var(--blue-primary);
+  box-shadow: 0 0 0 3px var(--blue-subtle);
+}
+
+/* Chrome Autofill fix for Dark / Light Modes */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px var(--bg-surface-elevated) inset !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+  caret-color: var(--text-primary);
+}
+
+.form-input::placeholder, .form-textarea::placeholder {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  opacity: 0.85;
+}
+
+.form-input:disabled, .form-select:disabled, .form-textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-helper-text {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+  line-height: 1.4;
 }
 
 /* Layout */

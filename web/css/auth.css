@@ -1,5 +1,6 @@
 /**
- * Habitizer Flat Auth Pages Stylesheet
+ * Habitizer Auth Pages Stylesheet (auth.css / login.css / register.css)
+ * Single Responsibility: Styling for Login and Registration cards and form inputs.
  */
 
 .auth-wrapper {
@@ -18,11 +19,12 @@
   border: 1.5px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 2.25rem 2rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .auth-header {
   text-align: center;
-  margin-bottom: 1.75rem;
+  margin-bottom: 2rem;
 }
 
 .auth-header .brand-logo-icon {
@@ -30,7 +32,7 @@
 }
 
 .auth-title {
-  font-size: 1.5rem;
+  font-size: 1.55rem;
   font-weight: 800;
   color: var(--text-primary);
   margin-bottom: 0.35rem;
@@ -43,25 +45,103 @@
   line-height: 1.5;
 }
 
-.auth-form-group {
-  margin-bottom: 1rem;
+.form-group, .auth-form-group {
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label, .auth-form-group .form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.45rem;
+  letter-spacing: -0.01em;
+}
+
+.form-input, .auth-form-group .form-input, input[type="text"], input[type="email"], input[type="password"] {
+  width: 100% !important;
+  background-color: var(--bg-surface-elevated) !important;
+  border: 1.5px solid var(--border-subtle) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 0.75rem 1rem !important;
+  color: var(--text-primary) !important;
+  font-size: 0.92rem !important;
+  font-family: inherit !important;
+  outline: none !important;
+  transition: all var(--transition-fast) !important;
+  box-sizing: border-box !important;
+}
+
+.form-input:focus, .auth-form-group .form-input:focus, input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
+  border-color: var(--blue-primary) !important;
+  background-color: var(--bg-surface) !important;
+  box-shadow: 0 0 0 3px var(--blue-subtle) !important;
+}
+
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .auth-form-group .form-input,
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="email"],
+[data-theme="dark"] input[type="password"] {
+  background-color: var(--bg-surface-elevated) !important;
+  border-color: var(--border-subtle) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .form-input:focus,
+[data-theme="dark"] .auth-form-group .form-input:focus,
+[data-theme="dark"] input[type="text"]:focus,
+[data-theme="dark"] input[type="email"]:focus,
+[data-theme="dark"] input[type="password"]:focus {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--blue-primary) !important;
+  box-shadow: 0 0 0 3px var(--blue-subtle) !important;
+}
+
+.form-input::placeholder, .auth-form-group .form-input::placeholder, input::placeholder {
+  color: var(--text-muted) !important;
+  font-size: 0.88rem !important;
+  opacity: 0.85;
+}
+
+/* Chrome Autofill fix for Dark / Light Modes */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px var(--bg-surface-elevated) inset !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+  caret-color: var(--text-primary);
 }
 
 .auth-submit-btn {
   width: 100%;
-  margin-top: 1.5rem;
+  margin-top: 1.25rem;
+  padding: 0.8rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
 }
 
 .auth-prompt-footer {
   text-align: center;
-  margin-top: 1.25rem;
-  font-size: 0.85rem;
+  margin-top: 1.5rem;
+  font-size: 0.86rem;
   color: var(--text-secondary);
 }
 
 .auth-link-bold {
   color: var(--blue-primary);
   font-weight: 700;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.auth-link-bold:hover {
+  color: var(--blue-hover);
+  text-decoration: underline;
 }
 
 .demo-presets {
@@ -71,12 +151,13 @@
 }
 
 .demo-presets-title {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   color: var(--text-muted);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   margin-bottom: 0.6rem;
+  text-align: center;
 }
 
 .btn-mock-preset {
