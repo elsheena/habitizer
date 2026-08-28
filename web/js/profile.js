@@ -47,9 +47,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (nameEl) nameEl.textContent = user.full_name;
       if (emailEl) emailEl.textContent = user.email;
+      const habits = await window.API.getHabits();
+      const activeCount = habits ? habits.filter(h => h.is_active !== false).length : 0;
+      const isPro = user.tier === 'premium' || user.plan === 'pro';
+
       if (tierBadge) {
-        tierBadge.textContent = user.tier === 'free' ? 'Free Plan (3 Habits)' : '★ Premium Plan';
-        tierBadge.className = `tier-badge ${user.tier === 'free' ? 'tier-free' : 'tier-premium'}`;
+        tierBadge.textContent = isPro ? '★ Habitizer Pro (Unlimited)' : 'Free Starter (3 Habits)';
+        tierBadge.className = `tier-badge ${isPro ? 'tier-premium' : 'tier-free'}`;
+      }
+
+      const habitLimitDisplay = document.getElementById('prof-habit-limit-display');
+      if (habitLimitDisplay) {
+        habitLimitDisplay.textContent = isPro ? `${activeCount} Active (Unlimited Pro)` : `${activeCount} / 3 (Free Cap)`;
+      }
+
+      const openModalBtn = document.getElementById('btn-open-premium-modal');
+      if (openModalBtn) {
+        openModalBtn.textContent = isPro ? '★ Manage Pro Membership' : '⚡ Compare Plans & Upgrade';
+        openModalBtn.onclick = () => {
+          if (window.PremiumModal) window.PremiumModal.open();
+        };
       }
 
       if (longestStreakEl) longestStreakEl.textContent = `${streaks.longest_streak} Days`;
