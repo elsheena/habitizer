@@ -51,10 +51,18 @@
             <span class="stat-label">Member Since:</span>
             <span>Aug 2026</span>
           </div>
+          <div class="profile-detail-row">
+            <span class="stat-label">Active Habits:</span>
+            <span id="prof-habit-limit-display">3 / 3 (Free Cap)</span>
+          </div>
         </div>
 
-        <button class="btn btn-secondary btn-sm btn-full profile-toggle-btn" id="btn-toggle-tier-prof">
-          Switch Free / Premium Preview
+        <button class="btn btn-primary btn-sm btn-full profile-upgrade-btn" id="btn-open-premium-modal">
+          <span data-icon="sparkles" data-size="16"></span> Compare Plans & Upgrade
+        </button>
+
+        <button class="btn btn-secondary btn-sm btn-full profile-toggle-btn" id="btn-toggle-tier-prof" style="margin-top: 0.5rem;">
+          Toggle Free / Pro Preview
         </button>
       </div>
 
@@ -165,6 +173,7 @@
   <script src="/js/components/StatsGridComponent.js"></script>
   <script src="/js/components/CatalogCardComponent.js"></script>
   <script src="/js/components/CalendarGridComponent.js"></script>
+  <script src="/js/components/PremiumModalComponent.js"></script>
   <!-- API Facade & Page Controller -->
   <script src="/js/api.js"></script>
   <script src="/js/sidebar.js"></script>

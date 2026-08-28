@@ -76,6 +76,25 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      // Check Active Habit Limit for Free Users
+      try {
+        const user = window.API ? await window.API.getCurrentUser() : null;
+        const habits = window.API ? await window.API.getHabits() : [];
+        const isPro = user && (user.tier === 'premium' || user.plan === 'pro');
+        const activeHabitsCount = habits ? habits.filter(h => h.is_active !== false).length : 0;
+
+        if (!isPro && activeHabitsCount >= 3) {
+          if (window.PremiumModal) {
+            window.PremiumModal.open({ reason: 'limit_reached' });
+          } else if (window.Toast) {
+            window.Toast.show("Free Tier limit reached (max 3 habits). Upgrade to Pro for unlimited habits!", 'warning');
+          }
+          return;
+        }
+      } catch (checkErr) {
+        console.warn("Could not check habit limit:", checkErr);
+      }
+
       const habitData = {
         bad_habit: badHabitInput.value.trim(),
         cue_trigger: cueInput.value.trim(),
