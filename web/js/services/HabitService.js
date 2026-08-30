@@ -1,129 +1,144 @@
 /**
- * HabitService — Habit CRUD operations.
- * Single Responsibility: Create, read, and delete habit substitution loops.
+ * HabitService — Habit Client for Go Habit-Service.
+ * Single Responsibility: Delegate habit CRUD and scheduling requests directly to Go backend microservice.
  */
 class HabitService {
-  /** @type {number} Maximum active habits for free-tier users. */
-  static FREE_TIER_LIMIT = 3;
-
-  /**
-   * @param {AuthService} authService
-   * @param {UserStateRepository} stateRepo
-   * @param {BackendSync} backendSync
-   */
   constructor(authService, stateRepo, backendSync) {
     this._auth = authService;
     this._stateRepo = stateRepo;
-    this._backendSync = backendSync;
+    this._baseUrl = window.location.origin.includes(':8000') ? '' : 'http://localhost:8000';
   }
 
-  /**
-   * Get all habits for the currently authenticated user.
-   * @returns {Promise<Array<Object>>}
-   */
   async getAll() {
-    if (!this._auth.isAuthenticated()) return [];
     const user = await this._auth.getCurrentUser();
-    const state = this._stateRepo.load(user.id);
+    const userId = user.id || 'usr_demo';
+
+    try {
+      const res = await fetch(`${this._baseUrl}/api/v1/habits?user_id=${encodeURIComponent(userId)}`);
+      if (res.ok) {
+        const body = await res.json();
+        const habits = body.data || body || [];
+        // Cache to local state for offline resiliency
+        const state = this._stateRepo.load(userId);
+        state.habits = habits;
+        this._stateRepo.save(userId, state);
+        return habits;
+      }
+    } catch (err) {
+      console.warn('Backend habit-service unreachable, loading offline cache:', err);
+    }
+
+    const state = this._stateRepo.load(userId);
     return state.habits || [];
   }
 
-  /**
-   * Create a new habit substitution loop.
-   * @param {Object} habitData — partial habit fields from the form
-   * @returns {Promise<Object>} the created habit
-   * @throws {Error} if not authenticated or free-tier limit reached
-   */
   async create(habitData) {
-    if (!this._auth.isAuthenticated()) {
-      throw new Error('Authentication required.');
-    }
-
     const user = await this._auth.getCurrentUser();
-    const state = this._stateRepo.load(user.id);
+    const userId = user.id || 'usr_demo';
+    const userTier = user.tier || 'free';
 
-    const activeCount = state.habits.filter(h => h.is_active).length;
-    if (user.tier === 'free' && activeCount >= HabitService.FREE_TIER_LIMIT) {
-      throw new Error('Free Tier limit reached (max 3 active habits). Upgrade to Premium in profile.');
-    }
-
-    const newHabit = {
-      id: HabitService._generateId(),
+    const payload = {
+      user_id: userId,
+      user_tier: userTier,
       bad_habit: habitData.bad_habit,
       frequency: habitData.frequency || 'daily',
       scheduled_time: habitData.scheduled_time || '09:00',
       cue_trigger: habitData.cue_trigger,
       replacement_habit: habitData.replacement_habit || '5-Minute Deep Breathing',
       reward: habitData.reward || '10 Shop Coins',
-      category: habitData.category || 'General',
-      is_active: true,
-      created_at: new Date().toISOString()
+      category: habitData.category || 'General'
     };
 
-    state.habits.unshift(newHabit);
-    this._stateRepo.save(user.id, state);
-    this._backendSync.syncHabitCreate(newHabit, user.id);
+    const res = await fetch(`${this._baseUrl}/api/v1/habits`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-    return newHabit;
+    const body = await res.json();
+    if (!res.ok) {
+      throw new Error(body.error || body.message || 'Failed to create habit loop.');
+    }
+
+    const created = body.data || body;
+    // Update local state cache
+    const state = this._stateRepo.load(userId);
+    state.habits.unshift(created);
+    this._stateRepo.save(userId, state);
+
+    return created;
   }
 
-  /**
-   * Update a habit record.
-   * @param {string} habitId
-   * @param {Object} updates
-   * @returns {Promise<Object|null>}
-   */
   async update(habitId, updates) {
     const user = await this._auth.getCurrentUser();
-    const state = this._stateRepo.load(user.id);
+    const userId = user.id || 'usr_demo';
+
+    if (updates.scheduled_time) {
+      return this.updateScheduledTime(habitId, updates.scheduled_time);
+    }
+
+    const state = this._stateRepo.load(userId);
     const target = state.habits.find(h => h.id === habitId);
     if (target) {
       Object.assign(target, updates);
-      this._stateRepo.save(user.id, state);
+      this._stateRepo.save(userId, state);
       return target;
     }
     return null;
   }
 
-  /**
-   * Update the scheduled time for a habit (e.g. when auto-scheduled into a free slot).
-   * @param {string} habitId
-   * @param {string} newTime
-   * @returns {Promise<Object|null>}
-   */
   async updateScheduledTime(habitId, newTime) {
     const user = await this._auth.getCurrentUser();
-    const state = this._stateRepo.load(user.id);
+    const userId = user.id || 'usr_demo';
+
+    try {
+      const res = await fetch(`${this._baseUrl}/api/v1/habits/update-time`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ habit_id: habitId, scheduled_time: newTime })
+      });
+
+      if (res.ok) {
+        const body = await res.json();
+        const updated = body.data || body;
+        const state = this._stateRepo.load(userId);
+        const target = state.habits.find(h => h.id === habitId);
+        if (target) {
+          target.scheduled_time = newTime;
+          this._stateRepo.save(userId, state);
+        }
+        return updated;
+      }
+    } catch (err) {
+      console.warn('Backend update-time failed, updating local cache:', err);
+    }
+
+    const state = this._stateRepo.load(userId);
     const target = state.habits.find(h => h.id === habitId);
     if (target) {
       target.scheduled_time = newTime;
-      this._stateRepo.save(user.id, state);
+      this._stateRepo.save(userId, state);
       return target;
     }
     return null;
   }
 
-  /**
-   * Delete a habit by ID.
-   * @param {string} habitId
-   * @returns {Promise<boolean>}
-   */
   async delete(habitId) {
     const user = await this._auth.getCurrentUser();
-    const state = this._stateRepo.load(user.id);
-    state.habits = state.habits.filter(h => h.id !== habitId);
-    this._stateRepo.save(user.id, state);
-    this._backendSync.syncHabitDelete(habitId);
-    return true;
-  }
+    const userId = user.id || 'usr_demo';
 
-  /**
-   * Generate a unique habit ID.
-   * @returns {string}
-   * @private
-   */
-  static _generateId() {
-    return 'hab_' + Math.random().toString(36).substr(2, 9);
+    try {
+      await fetch(`${this._baseUrl}/api/v1/habits?id=${encodeURIComponent(habitId)}`, {
+        method: 'DELETE'
+      });
+    } catch (err) {
+      console.warn('Backend delete failed, removing locally:', err);
+    }
+
+    const state = this._stateRepo.load(userId);
+    state.habits = state.habits.filter(h => h.id !== habitId);
+    this._stateRepo.save(userId, state);
+    return true;
   }
 }
 

@@ -1,9 +1,8 @@
 /**
  * CalendarGridComponent — UI Component for interactive habit calendar & hourly timetable.
- * Single Responsibility: Build Hourly Timetable Matrix (Week, 3-Day, Day) with continuous
- * floating event and habit cards hovering across grid slots, Multi-Column Overlap Slicing
- * (zero overlapping occlusion), HTML5 Drag-and-Drop Rescheduling, Interactive Time Slot
- * Creation Modal (Habit vs Calendar Event), Month calendar view, and zero emoji compliance.
+ * Single Responsibility: Build and render Hourly Timetable Matrix (Week, 3-Day, Day) with continuous
+ * floating event and habit cards hovering across grid slots, and Month calendar view.
+ * Delegates modal dialogs and collision mathematics to dedicated sub-components.
  *
  * Implemented per UML 2.0 specifications.
  * Zero Emojis Enforced.
@@ -39,13 +38,21 @@ class CalendarGridComponent extends UIComponent {
     // Active drag-and-drop state
     this._draggedItem = null;
 
-    // Slot creation, Event edit & Reschedule Scope modal states
-    this._activeSlotContext = null;
-    this._activeEditItem = null;
-    this._pendingReschedule = null;
-    this._initSlotModalEvents();
-    this._initEventEditModalEvents();
-    this._initRescheduleScopeModalEvents();
+    // Sub-Component Collaborators (Single Responsibility Delegation)
+    this.slotCreationModal = new SlotCreationModalComponent({
+      onEventCreated: () => this._onDataChanged()
+    });
+
+    this.eventDetailModal = new EventDetailModalComponent({
+      onEventUpdated: () => this._onDataChanged(),
+      onEventDeleted: () => this._onDataChanged()
+    });
+
+    this.rescheduleScopeModal = new RescheduleScopeModalComponent({
+      onScopeSelected: (scope, ctx) => this._applyRescheduleScope(scope, ctx)
+    });
+
+    this.dayLogModal = new DayLogModalComponent();
   }
 
   /**
@@ -63,6 +70,18 @@ class CalendarGridComponent extends UIComponent {
     this.render();
   }
 
+  async _onDataChanged() {
+    try {
+      if (window.API) {
+        if (window.API.getHabits) this.habits = await window.API.getHabits();
+        if (window.API.getCalendarEvents) this.events = await window.API.getCalendarEvents();
+      }
+      this.render();
+    } catch (err) {
+      console.error('Failed to reload calendar data:', err);
+    }
+  }
+
   render() {
     this._updateTitle();
     this._updateSyncBanner();
@@ -70,7 +89,7 @@ class CalendarGridComponent extends UIComponent {
     const container = document.getElementById('calendar-view-container') || document.getElementById('calendar-grid-wrapper');
     if (!container) return;
 
-    container.innerHTML = '';
+    container.textContent = '';
 
     let viewElement;
     if (this.currentView === 'month') {
@@ -191,11 +210,16 @@ class CalendarGridComponent extends UIComponent {
   _updateSyncBanner() {
     const badge = document.getElementById('cal-sync-status-badge');
     if (badge) {
+      badge.textContent = '';
       if (this.calendarSynced) {
-        badge.innerHTML = `<span data-icon="check" data-size="12"></span> Connected (${this.events.length} Events)`;
+        const iconSpan = this.createElement('span', { attrs: { 'data-icon': 'check', 'data-size': '12' } });
+        badge.appendChild(iconSpan);
+        badge.appendChild(document.createTextNode(` Connected (${this.events.length} Events)`));
         badge.className = 'badge badge-google-active';
       } else {
-        badge.innerHTML = `<span data-icon="alert" data-size="12"></span> Disconnected`;
+        const iconSpan = this.createElement('span', { attrs: { 'data-icon': 'alert', 'data-size': '12' } });
+        badge.appendChild(iconSpan);
+        badge.appendChild(document.createTextNode(' Disconnected'));
         badge.className = 'badge badge-gray';
       }
     }
@@ -213,7 +237,7 @@ class CalendarGridComponent extends UIComponent {
       if (tierEl) {
         const isPro = this.user.tier === 'premium';
         tierEl.textContent = isPro ? 'Habitizer Pro' : 'Free Starter';
-        tierEl.style.color = isPro ? '#38bdf8' : 'var(--emerald-primary, #10b981)';
+        tierEl.className = isPro ? 'sidebar-tier-pro' : 'sidebar-tier-free';
       }
     }
   }
@@ -226,8 +250,8 @@ class CalendarGridComponent extends UIComponent {
     const wrapper = this.createElement('div', { className: 'hourly-timetable-container' });
     const displayedDates = this._getDisplayedDates(dayCount);
 
-    const totalHours = this.hourEnd - this.hourStart; // 15 hours (07:00 - 22:00)
-    const totalColumnHeight = totalHours * this.hourRowHeight; // 840px
+    const totalHours = this.hourEnd - this.hourStart; // 24 hours (00:00 - 24:00)
+    const totalColumnHeight = totalHours * this.hourRowHeight;
 
     // 1. TOP STICKY HEADER ROW
     const headerRow = this.createElement('div', {
@@ -328,7 +352,7 @@ class CalendarGridComponent extends UIComponent {
         events: {
           click: (e) => {
             if (e.target.closest('.floating-event-card')) return;
-            this._openSlotCreationModal(dateObj, hourStartStr);
+            this.slotCreationModal.open(dateObj, hourStartStr);
           },
           dragover: (e) => {
             e.preventDefault();
@@ -353,7 +377,7 @@ class CalendarGridComponent extends UIComponent {
             const offsetY = e.clientY - rect.top;
             const pct = Math.max(0, Math.min(0.99, offsetY / rect.height));
             const minuteOffset = Math.min(45, Math.floor((pct * 60) / 15) * 15);
-            this._openRescheduleScopeModal(dateObj.dateKey, h, minuteOffset);
+            this.rescheduleScopeModal.open(this._draggedItem, dateObj.dateKey, h, minuteOffset);
           }
         }
       });
@@ -364,7 +388,7 @@ class CalendarGridComponent extends UIComponent {
         events: {
           click: (e) => {
             e.stopPropagation();
-            this._openSlotCreationModal(dateObj, hourStartStr);
+            this.slotCreationModal.open(dateObj, hourStartStr);
           }
         }
       });
@@ -374,7 +398,7 @@ class CalendarGridComponent extends UIComponent {
 
     // Active Now Line Indicator for Today
     if (dateObj.isToday) {
-      const activeLineTop = 8 * this.hourRowHeight; // 15:00 indicator
+      const activeLineTop = 14.5 * this.hourRowHeight;
       const activeLine = this.createElement('div', {
         className: 'active-now-time-line',
         attrs: { style: `top: ${activeLineTop}px;` },
@@ -386,10 +410,10 @@ class CalendarGridComponent extends UIComponent {
       dayCol.appendChild(activeLine);
     }
 
-    // Prepare all items to render for this day (Google events, custom events, and habit routines)
+    // Prepare items for this day
     const dayEvents = (this.events || []).filter(e => !e.date || e.date === dateObj.dateKey);
-    const dayStartMin = this.hourStart * 60; // 420 min (07:00)
-    const dayEndMin = this.hourEnd * 60;     // 1320 min (22:00)
+    const dayStartMin = this.hourStart * 60;
+    const dayEndMin = this.hourEnd * 60;
 
     const rawItems = [];
 
@@ -417,11 +441,10 @@ class CalendarGridComponent extends UIComponent {
     (this.habits || []).forEach(h => {
       const hTime = h.scheduled_time || '09:00';
       const hStart = CalendarService.timeToMinutes(hTime);
-      const hDuration = 30; // 30 mins
+      const hDuration = 30;
       const hEnd = hStart + hDuration;
 
       if (hEnd > dayStartMin && hStart < dayEndMin) {
-        // Detect conflict
         const isConflict = dayEvents.some(ev => {
           const evS = CalendarService.timeToMinutes(ev.startTime || '09:00');
           const evE = CalendarService.timeToMinutes(ev.endTime || '10:00');
@@ -443,8 +466,8 @@ class CalendarGridComponent extends UIComponent {
       }
     });
 
-    // 3. Compute Smart Multi-Column Overlap Slicing
-    const positionedItems = this._computeEventCollisionColumns(rawItems);
+    // 3. Compute Smart Multi-Column Overlap Slicing via CollisionEngine
+    const positionedItems = CollisionEngine.computeColumns(rawItems);
 
     // 4. Render Positioned Cards
     positionedItems.forEach(item => {
@@ -455,7 +478,6 @@ class CalendarGridComponent extends UIComponent {
       const heightPx = Math.max(22, (durationMin / 60) * this.hourRowHeight - 2);
       const isCompact = heightPx < 44;
 
-      // Card Classes
       const cardClasses = ['floating-event-card'];
       if (item.type === 'event') {
         cardClasses.push(item.isGoogle ? 'card-google-floating' : 'card-custom-floating');
@@ -464,7 +486,6 @@ class CalendarGridComponent extends UIComponent {
       }
       if (isCompact) cardClasses.push('compact-floating');
 
-      // Inner Elements
       const cardChildren = [];
       const iconName = item.type === 'event' ? (item.isGoogle ? 'google' : 'calendar') : (item.isConflict ? 'alert' : 'check');
       const timeBadge = this.createElement('div', {
@@ -487,7 +508,6 @@ class CalendarGridComponent extends UIComponent {
         cardChildren.push(subEl);
       }
 
-      // Column Slicing Positioning Styles
       const leftPct = (item.colIndex / item.totalCols) * 100;
       const widthPct = (1 / item.totalCols) * 100;
 
@@ -504,7 +524,7 @@ class CalendarGridComponent extends UIComponent {
         events: {
           click: (e) => {
             e.stopPropagation();
-            this._openEventDetailModal(item, dateObj);
+            this.eventDetailModal.open(item, dateObj);
           },
           dragstart: (e) => {
             this._draggedItem = item;
@@ -525,595 +545,9 @@ class CalendarGridComponent extends UIComponent {
     return dayCol;
   }
 
-  /**
-   * Overlapping Event Collision Engine:
-   * Slices overlapping events into side-by-side vertical columns without clipping.
-   *
-   * @param {Array<Object>} items — raw items with startMin, endMin
-   * @returns {Array<Object>} positioned items with colIndex and totalCols assigned
-   */
-  _computeEventCollisionColumns(items) {
-    if (!items || items.length === 0) return [];
-
-    // Sort by startMin ASC, then by duration DESC
-    const sorted = [...items].sort((a, b) => {
-      if (a.startMin !== b.startMin) return a.startMin - b.startMin;
-      return (b.endMin - b.startMin) - (a.endMin - a.startMin);
-    });
-
-    // 1. Group items into connected collision clusters
-    const clusters = [];
-    let currentCluster = [];
-    let clusterEnd = -1;
-
-    sorted.forEach(item => {
-      if (currentCluster.length === 0) {
-        currentCluster.push(item);
-        clusterEnd = item.endMin;
-      } else {
-        if (item.startMin < clusterEnd) {
-          // Overlaps cluster
-          currentCluster.push(item);
-          clusterEnd = Math.max(clusterEnd, item.endMin);
-        } else {
-          // New cluster
-          clusters.push(currentCluster);
-          currentCluster = [item];
-          clusterEnd = item.endMin;
-        }
-      }
-    });
-    if (currentCluster.length > 0) {
-      clusters.push(currentCluster);
-    }
-
-    // 2. Assign column index within each cluster
-    const result = [];
-
-    clusters.forEach(cluster => {
-      const columns = []; // array of endMin for each column
-
-      cluster.forEach(item => {
-        let placedCol = -1;
-
-        for (let c = 0; c < columns.length; c++) {
-          if (columns[c] <= item.startMin) {
-            placedCol = c;
-            columns[c] = item.endMin;
-            break;
-          }
-        }
-
-        if (placedCol === -1) {
-          placedCol = columns.length;
-          columns.push(item.endMin);
-        }
-
-        item.colIndex = placedCol;
-      });
-
-      const totalCols = Math.max(1, columns.length);
-      cluster.forEach(item => {
-        item.totalCols = totalCols;
-        result.push(item);
-      });
-    });
-
-    return result;
-  }
-
-  /**
-   * Handle Drag-and-Drop Drop Event on an Hourly Time Slot.
-   * @param {string} targetDateKey
-   * @param {number} targetHour
-   * @param {number} [targetMinute=0] 0, 15, 30, or 45
-   */
-  async _handleDropOnSlot(targetDateKey, targetHour, targetMinute = 0) {
-    if (!this._draggedItem) return;
-
-    const item = this._draggedItem;
-    const newStartTime = `${String(targetHour).padStart(2, '0')}:${String(targetMinute).padStart(2, '0')}`;
-    const origDurationMin = Math.max(15, item.endMin - item.startMin);
-    const newStartTotalMin = (targetHour * 60) + targetMinute;
-    const newEndMin = newStartTotalMin + origDurationMin;
-    const newEndTime = CalendarService.minutesToTime(newEndMin);
-
-    try {
-      if (item.type === 'habit') {
-        if (window.API && window.API.updateHabitTime) {
-          await window.API.updateHabitTime(item.id, newStartTime);
-          const updatedHabits = await window.API.getHabits();
-          this.habits = updatedHabits;
-          this.render();
-          if (window.Toast) {
-            window.Toast.show(`Rescheduled habit "${item.title}" to ${newStartTime}!`, 'success');
-          }
-        }
-      } else if (item.type === 'event') {
-        if (window.API && window.API.updateCalendarEvent) {
-          await window.API.updateCalendarEvent(item.id, {
-            date: targetDateKey,
-            startTime: newStartTime,
-            endTime: newEndTime
-          });
-          const updatedEvents = await window.API.getCalendarEvents();
-          this.events = updatedEvents;
-          this.render();
-          if (window.Toast) {
-            window.Toast.show(`Rescheduled event "${item.title}" to ${newStartTime}!`, 'success');
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Failed to reschedule item:', err);
-      if (window.Toast) window.Toast.show('Could not update time slot.', 'error');
-    }
-  }
-
-  /**
-   * Open the Interactive Slot Creation Modal (Habit vs Calendar Event).
-   * @param {Object} dateObj
-   * @param {string} timeStr
-   */
-  _openSlotCreationModal(dateObj, timeStr) {
-    const modal = document.getElementById('calendar-slot-create-modal');
-    if (!modal) return;
-
-    this._activeSlotContext = {
-      dateKey: dateObj.dateKey,
-      dow: dateObj.dow,
-      dayNum: dateObj.dayNum,
-      timeStr: timeStr
-    };
-
-    // Reset Modal View to Step 1 (Choice)
-    const stepChoice = document.getElementById('slot-modal-step-choice');
-    const stepForm = document.getElementById('slot-modal-step-form');
-    const btnBack = document.getElementById('slot-modal-btn-back');
-    const btnSubmit = document.getElementById('slot-modal-btn-submit');
-    const btnCancel = document.getElementById('slot-modal-btn-cancel');
-    const timeLabel = document.getElementById('slot-modal-time-label');
-
-    if (stepChoice) stepChoice.style.display = 'block';
-    if (stepForm) stepForm.style.display = 'none';
-    if (btnBack) btnBack.style.display = 'none';
-    if (btnSubmit) btnSubmit.style.display = 'none';
-    if (btnCancel) btnCancel.style.display = 'inline-flex';
-
-    if (timeLabel) {
-      timeLabel.innerHTML = `Selected time slot: <strong>${dateObj.dow}, Aug ${dateObj.dayNum} at ${timeStr}</strong>`;
-    }
-
-    // Prefill form values for Step 2
-    const startHour = parseInt(timeStr.split(':')[0], 10) || 9;
-    const endHour = Math.min(24, startHour + 1);
-    const endTimeStr = endHour === 24 ? '23:59' : `${String(endHour).padStart(2, '0')}:00`;
-
-    const inputDate = document.getElementById('slot-ev-date');
-    const inputStart = document.getElementById('slot-ev-start');
-    const inputEnd = document.getElementById('slot-ev-end');
-    const inputTitle = document.getElementById('slot-ev-title');
-    const inputDesc = document.getElementById('slot-ev-desc');
-    const inputLoc = document.getElementById('slot-ev-loc');
-
-    if (inputDate) inputDate.value = dateObj.dateKey;
-    if (inputStart) inputStart.value = timeStr;
-    if (inputEnd) inputEnd.value = endTimeStr;
-    if (inputTitle) inputTitle.value = '';
-    if (inputDesc) inputDesc.value = '';
-    if (inputLoc) inputLoc.value = '';
-
-    modal.classList.add('open');
-    if (window.Icons) window.Icons.renderAll();
-  }
-
-  /**
-   * Wire up event listeners for the Slot Creation Modal.
-   * @private
-   */
-  _initSlotModalEvents() {
-    const bindEvents = () => {
-      const modal = document.getElementById('calendar-slot-create-modal');
-      const closeX = document.getElementById('slot-modal-close-x');
-      const btnCancel = document.getElementById('slot-modal-btn-cancel');
-      const btnBack = document.getElementById('slot-modal-btn-back');
-      const btnChoiceHabit = document.getElementById('btn-choice-habit');
-      const btnChoiceEvent = document.getElementById('btn-choice-event');
-      const btnSubmit = document.getElementById('slot-modal-btn-submit');
-      const stepChoice = document.getElementById('slot-modal-step-choice');
-      const stepForm = document.getElementById('slot-modal-step-form');
-
-      const closeModal = () => {
-        if (modal) modal.classList.remove('open');
-      };
-
-      if (closeX) closeX.addEventListener('click', closeModal);
-      if (btnCancel) btnCancel.addEventListener('click', closeModal);
-
-      // Choice A: Habit Substitution -> Redirect to /create
-      if (btnChoiceHabit) {
-        btnChoiceHabit.addEventListener('click', () => {
-          closeModal();
-          const targetTime = this._activeSlotContext ? this._activeSlotContext.timeStr : '09:00';
-          window.location.href = `/create?time=${encodeURIComponent(targetTime)}`;
-        });
-      }
-
-      // Choice B: Calendar Event -> Reveal Form
-      if (btnChoiceEvent) {
-        btnChoiceEvent.addEventListener('click', () => {
-          if (stepChoice) stepChoice.style.display = 'none';
-          if (stepForm) stepForm.style.display = 'block';
-          if (btnBack) btnBack.style.display = 'inline-flex';
-          if (btnSubmit) btnSubmit.style.display = 'inline-flex';
-        });
-      }
-
-      // Back to Choice
-      if (btnBack) {
-        btnBack.addEventListener('click', () => {
-          if (stepChoice) stepChoice.style.display = 'block';
-          if (stepForm) stepForm.style.display = 'none';
-          if (btnBack) btnBack.style.display = 'none';
-          if (btnSubmit) btnSubmit.style.display = 'none';
-        });
-      }
-
-      // Submit Custom Event
-      if (btnSubmit) {
-        btnSubmit.addEventListener('click', async (e) => {
-          e.preventDefault();
-          const title = (document.getElementById('slot-ev-title')?.value || '').trim();
-          const desc = (document.getElementById('slot-ev-desc')?.value || '').trim();
-          const date = document.getElementById('slot-ev-date')?.value || '2026-08-28';
-          const start = document.getElementById('slot-ev-start')?.value || '09:00';
-          const end = document.getElementById('slot-ev-end')?.value || '10:00';
-          const loc = (document.getElementById('slot-ev-loc')?.value || '').trim();
-          const tag = document.getElementById('slot-ev-tag')?.value || 'General';
-
-          if (!title) {
-            if (window.Toast) window.Toast.show('Please enter an event title (* required)', 'error');
-            document.getElementById('slot-ev-title')?.focus();
-            return;
-          }
-
-          try {
-            if (window.API && window.API.addCalendarEvent) {
-              await window.API.addCalendarEvent({
-                title: title,
-                description: desc,
-                date: date,
-                startTime: start,
-                endTime: end,
-                location: loc,
-                tag: tag,
-                isGoogleEvent: false
-              });
-
-              const updatedEvents = await window.API.getCalendarEvents();
-              this.events = updatedEvents;
-              this.render();
-              closeModal();
-
-              if (window.Toast) {
-                window.Toast.show(`Calendar event "${title}" added successfully!`, 'success');
-              }
-            }
-          } catch (err) {
-            console.error('Failed to create event:', err);
-            if (window.Toast) window.Toast.show('Failed to save event.', 'error');
-          }
-        });
-      }
-    };
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', bindEvents);
-    } else {
-      bindEvents();
-    }
-  }
-
-  /**
-   * Open the Event Detail & Edit Modal for inspecting and updating an event or habit.
-   * @param {Object} item - positioned card item containing .data, .type, .title, etc.
-   * @param {Object} dateObj - date object context
-   */
-  _openEventDetailModal(item, dateObj) {
-    const modal = document.getElementById('calendar-event-edit-modal');
-    if (!modal) return;
-
-    this._activeEditItem = { item, dateObj };
-
-    const titleText = document.getElementById('edit-modal-title-text');
-    const badge = document.getElementById('edit-modal-badge');
-    const habitInfo = document.getElementById('edit-habit-loop-info');
-    const habitDetails = document.getElementById('edit-habit-loop-details');
-    const idInput = document.getElementById('edit-ev-id');
-    const typeInput = document.getElementById('edit-ev-type');
-    const titleInput = document.getElementById('edit-ev-title');
-    const descInput = document.getElementById('edit-ev-desc');
-    const dateInput = document.getElementById('edit-ev-date');
-    const tagInput = document.getElementById('edit-ev-tag');
-    const startInput = document.getElementById('edit-ev-start');
-    const endInput = document.getElementById('edit-ev-end');
-    const locInput = document.getElementById('edit-ev-loc');
-    const deleteBtn = document.getElementById('btn-delete-event');
-
-    if (idInput) idInput.value = item.id || '';
-    if (typeInput) typeInput.value = item.type || 'event';
-    if (titleInput) titleInput.value = item.title || '';
-    if (dateInput) dateInput.value = dateObj.dateKey || '2026-08-28';
-    if (startInput) startInput.value = item.startTime || '09:00';
-    if (endInput) endInput.value = item.endTime || '10:00';
-
-    if (item.type === 'habit') {
-      const h = item.data || {};
-      if (titleText) titleText.textContent = 'Habit Routine Details';
-      if (badge) {
-        badge.textContent = 'Healthy Routine';
-        badge.className = 'badge badge-emerald';
-      }
-      if (habitInfo) habitInfo.style.display = 'block';
-      if (habitDetails) {
-        habitDetails.innerHTML = `
-          <div><strong>Trigger Cue:</strong> ${h.cue_trigger || 'Specified cue'}</div>
-          <div><strong>Replaces:</strong> ${h.bad_habit || 'Unwanted habit'}</div>
-          <div><strong>Reward:</strong> ${h.reward || '10 Habit Coins'}</div>
-        `;
-      }
-      if (descInput) descInput.value = `Avoids: ${h.bad_habit || 'Trigger'}`;
-      if (locInput) locInput.value = h.category || 'Health & Wellness';
-      if (tagInput) tagInput.value = 'Health';
-      if (deleteBtn) deleteBtn.innerHTML = `<span data-icon="trash" data-size="14"></span> Delete Habit`;
-    } else {
-      const ev = item.data || {};
-      if (titleText) titleText.textContent = 'Event Details';
-      if (badge) {
-        if (ev.isGoogleEvent) {
-          badge.textContent = 'Google Calendar';
-          badge.className = 'badge badge-google-active';
-        } else {
-          badge.textContent = 'Custom Event';
-          badge.className = 'badge badge-blue';
-        }
-      }
-      if (habitInfo) habitInfo.style.display = 'none';
-      if (descInput) descInput.value = ev.description || '';
-      if (locInput) locInput.value = ev.location || '';
-      if (tagInput) tagInput.value = ev.tag || 'Work';
-      if (deleteBtn) deleteBtn.innerHTML = `<span data-icon="trash" data-size="14"></span> Delete Event`;
-    }
-
-    modal.classList.add('open');
-    if (window.Icons) window.Icons.renderAll();
-  }
-
-  /**
-   * Wire up event listeners for the Event Detail & Edit Modal.
-   * @private
-   */
-  _initEventEditModalEvents() {
-    const bindEvents = () => {
-      const modal = document.getElementById('calendar-event-edit-modal');
-      const closeX = document.getElementById('edit-modal-close-x');
-      const btnCancel = document.getElementById('btn-cancel-edit-event');
-      const btnSave = document.getElementById('btn-save-edit-event');
-      const btnDelete = document.getElementById('btn-delete-event');
-
-      const closeModal = () => {
-        if (modal) modal.classList.remove('open');
-      };
-
-      if (closeX) closeX.addEventListener('click', closeModal);
-      if (btnCancel) btnCancel.addEventListener('click', closeModal);
-
-      if (modal) {
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) closeModal();
-        });
-      }
-
-      // Save Event Changes
-      if (btnSave) {
-        btnSave.addEventListener('click', async (e) => {
-          e.preventDefault();
-          const id = document.getElementById('edit-ev-id')?.value;
-          const type = document.getElementById('edit-ev-type')?.value;
-          const title = (document.getElementById('edit-ev-title')?.value || '').trim();
-          const desc = (document.getElementById('edit-ev-desc')?.value || '').trim();
-          const date = document.getElementById('edit-ev-date')?.value || '2026-08-28';
-          const start = document.getElementById('edit-ev-start')?.value || '09:00';
-          const end = document.getElementById('edit-ev-end')?.value || '10:00';
-          const loc = (document.getElementById('edit-ev-loc')?.value || '').trim();
-          const tag = document.getElementById('edit-ev-tag')?.value || 'Work';
-
-          if (!title) {
-            if (window.Toast) window.Toast.show('Please enter a title (* required)', 'error');
-            document.getElementById('edit-ev-title')?.focus();
-            return;
-          }
-
-          try {
-            if (type === 'habit') {
-              if (window.API && window.API.updateHabit) {
-                await window.API.updateHabit(id, {
-                  replacement_habit: title,
-                  scheduled_time: start
-                });
-              } else if (window.API && window.API.updateHabitTime) {
-                await window.API.updateHabitTime(id, start);
-              }
-              const updatedHabits = await window.API.getHabits();
-              this.habits = updatedHabits;
-            } else {
-              if (window.API && window.API.updateCalendarEvent) {
-                await window.API.updateCalendarEvent(id, {
-                  title: title,
-                  description: desc,
-                  date: date,
-                  startTime: start,
-                  endTime: end,
-                  location: loc,
-                  tag: tag
-                });
-              }
-              const updatedEvents = await window.API.getCalendarEvents();
-              this.events = updatedEvents;
-            }
-
-            this.render();
-            closeModal();
-            if (window.Toast) {
-              window.Toast.show(`Updated "${title}" successfully!`, 'success');
-            }
-          } catch (err) {
-            console.error('Failed to update event:', err);
-            if (window.Toast) window.Toast.show('Failed to save changes.', 'error');
-          }
-        });
-      }
-
-      // Delete Event
-      if (btnDelete) {
-        btnDelete.addEventListener('click', async (e) => {
-          e.preventDefault();
-          const id = document.getElementById('edit-ev-id')?.value;
-          const type = document.getElementById('edit-ev-type')?.value;
-          const title = (document.getElementById('edit-ev-title')?.value || 'item').trim();
-
-          try {
-            if (type === 'habit') {
-              if (window.API && window.API.deleteHabit) {
-                await window.API.deleteHabit(id);
-              }
-              const updatedHabits = await window.API.getHabits();
-              this.habits = updatedHabits;
-            } else {
-              if (window.API && window.API.deleteCalendarEvent) {
-                await window.API.deleteCalendarEvent(id);
-              }
-              const updatedEvents = await window.API.getCalendarEvents();
-              this.events = updatedEvents;
-            }
-
-            this.render();
-            closeModal();
-            if (window.Toast) {
-              window.Toast.show(`Deleted "${title}" from calendar.`, 'info');
-            }
-          } catch (err) {
-            console.error('Failed to delete event:', err);
-            if (window.Toast) window.Toast.show('Failed to delete item.', 'error');
-          }
-        });
-      }
-    };
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', bindEvents);
-    } else {
-      bindEvents();
-    }
-  }
-
-  /**
-   * Open the 3-Point Reschedule Scope Choice Modal.
-   * (1. Only this event, 2. This and all future events, 3. All events in the series)
-   * @param {string} targetDateKey
-   * @param {number} targetHour
-   * @param {number} targetMinute
-   */
-  _openRescheduleScopeModal(targetDateKey, targetHour, targetMinute = 0) {
-    if (!this._draggedItem) return;
-
-    this._pendingReschedule = {
-      item: this._draggedItem,
-      targetDateKey: targetDateKey,
-      targetHour: targetHour,
-      targetMinute: targetMinute
-    };
-
-    const modal = document.getElementById('calendar-reschedule-scope-modal');
-    if (!modal) {
-      this._applyRescheduleScope('single');
-      return;
-    }
-
-    const newStartTime = `${String(targetHour).padStart(2, '0')}:${String(targetMinute).padStart(2, '0')}`;
-    const helpText = document.getElementById('scope-modal-help-text');
-    if (helpText) {
-      helpText.innerHTML = `You are moving <strong>"${this._draggedItem.title}"</strong> to <strong>${newStartTime}</strong> on <strong>${targetDateKey}</strong>.<br/>Which occurrences would you like to update?`;
-    }
-
-    modal.classList.add('open');
-    if (window.Icons) window.Icons.renderAll();
-  }
-
-  /**
-   * Wire up event listeners for the Reschedule Scope Modal.
-   * @private
-   */
-  _initRescheduleScopeModalEvents() {
-    const bindEvents = () => {
-      const modal = document.getElementById('calendar-reschedule-scope-modal');
-      const closeX = document.getElementById('scope-modal-close-x');
-      const btnCancel = document.getElementById('btn-scope-cancel');
-      const btnSingle = document.getElementById('btn-scope-single');
-      const btnFuture = document.getElementById('btn-scope-future');
-      const btnAll = document.getElementById('btn-scope-all');
-
-      const closeModal = () => {
-        if (modal) modal.classList.remove('open');
-        this._pendingReschedule = null;
-      };
-
-      if (closeX) closeX.addEventListener('click', closeModal);
-      if (btnCancel) btnCancel.addEventListener('click', closeModal);
-
-      if (modal) {
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) closeModal();
-        });
-      }
-
-      if (btnSingle) {
-        btnSingle.addEventListener('click', () => {
-          this._applyRescheduleScope('single');
-          closeModal();
-        });
-      }
-
-      if (btnFuture) {
-        btnFuture.addEventListener('click', () => {
-          this._applyRescheduleScope('future');
-          closeModal();
-        });
-      }
-
-      if (btnAll) {
-        btnAll.addEventListener('click', () => {
-          this._applyRescheduleScope('all');
-          closeModal();
-        });
-      }
-    };
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', bindEvents);
-    } else {
-      bindEvents();
-    }
-  }
-
-  /**
-   * Apply the chosen reschedule scope ('single' | 'future' | 'all').
-   * @param {'single'|'future'|'all'} scope
-   */
-  async _applyRescheduleScope(scope) {
-    if (!this._pendingReschedule) return;
-
-    const { item, targetDateKey, targetHour, targetMinute } = this._pendingReschedule;
+  async _applyRescheduleScope(scope, ctx) {
+    if (!ctx) return;
+    const { item, targetDateKey, targetHour, targetMinute } = ctx;
     const newStartTime = `${String(targetHour).padStart(2, '0')}:${String(targetMinute).padStart(2, '0')}`;
     const origDurationMin = Math.max(15, item.endMin - item.startMin);
     const newStartTotalMin = (targetHour * 60) + targetMinute;
@@ -1138,8 +572,6 @@ class CalendarGridComponent extends UIComponent {
             });
           }
         }
-        const updatedHabits = await window.API.getHabits();
-        this.habits = updatedHabits;
       } else if (item.type === 'event') {
         if (scope === 'all') {
           const allEvents = await window.API.getCalendarEvents();
@@ -1170,11 +602,9 @@ class CalendarGridComponent extends UIComponent {
             });
           }
         }
-        const updatedEvents = await window.API.getCalendarEvents();
-        this.events = updatedEvents;
       }
 
-      this.render();
+      await this._onDataChanged();
       const scopeLabel = scope === 'all' ? 'all occurrences in series' : scope === 'future' ? 'this and all future occurrences' : 'this event only';
       if (window.Toast) {
         window.Toast.show(`Rescheduled "${item.title}" to ${newStartTime} (${scopeLabel})!`, 'success');
@@ -1183,6 +613,10 @@ class CalendarGridComponent extends UIComponent {
       console.error('Failed to apply reschedule scope:', err);
       if (window.Toast) window.Toast.show('Could not update time slot.', 'error');
     }
+  }
+
+  openDayModal(day, month, year, dateKey) {
+    this.dayLogModal.open(day, month, year, dateKey, this.habits, this.events, this.calendarSynced);
   }
 
   /**
@@ -1279,103 +713,6 @@ class CalendarGridComponent extends UIComponent {
     }
 
     return chips;
-  }
-
-  openDayModal(day, month, year, dateKey) {
-    const modal = document.getElementById('calendar-detail-modal') || document.getElementById('habit-modal');
-    const modalTitle = document.getElementById('modal-habit-date') || document.getElementById('modal-habit-title');
-    const modalContent = document.getElementById('modal-habit-content');
-    if (!modal || !modalTitle || !modalContent) return;
-
-    const mName = this.monthNames[month] || "August";
-    modalTitle.textContent = `Daily Log — ${mName} ${day}, ${year}`;
-    modalContent.innerHTML = '';
-
-    const dayEvents = (this.events || []).filter(e => !e.date || e.date === dateKey);
-    const freeSlots = window.API && window.API.getFreeSlots ? window.API.getFreeSlots(dateKey, this.events) : [];
-
-    // Header Action: Refresh Schedule
-    const refreshBtn = this.createElement('button', {
-      className: ['btn', 'btn-primary', 'btn-sm', 'btn-full'],
-      attrs: { style: 'margin-bottom: 0.85rem;' },
-      text: 'Auto-Fit Habits into Free Slots',
-      events: {
-        click: async () => {
-          if (window.API && window.API.autoScheduleHabitsIntoFreeSlots) {
-            await window.API.autoScheduleHabitsIntoFreeSlots(dateKey);
-            const updated = await window.API.getHabits();
-            this.habits = updated;
-            this.render();
-            this.openDayModal(day, month, year, dateKey);
-            if (window.Toast) window.Toast.show('Schedule aligned with your free time slots!', 'success');
-          }
-        }
-      }
-    });
-    modalContent.appendChild(refreshBtn);
-
-    // Section 1: Scheduled Calendar Events
-    const gHeader = this.createElement('h4', { className: 'modal-subhead', text: `Scheduled Calendar Events (${dayEvents.length})` });
-    modalContent.appendChild(gHeader);
-
-    if (dayEvents.length === 0) {
-      modalContent.appendChild(this.createElement('p', { className: 'modal-empty-text', text: 'No calendar events on this date.' }));
-    } else {
-      dayEvents.forEach(ev => {
-        const badge = this.createElement('span', { className: ['badge', 'badge-google-pill'], text: `${ev.startTime} - ${ev.endTime}` });
-        const title = this.createElement('h5', { className: 'modal-item-title-sm', text: ev.title });
-        const loc = this.createElement('p', { className: 'modal-rep-text', text: `${ev.location || (ev.isGoogleEvent ? 'Google Calendar' : 'Custom')} — ${ev.description || 'Event'}` });
-        modalContent.appendChild(this.createElement('div', {
-          className: ['card-static', 'card-padded', 'modal-item-card', 'card-google-border'],
-          children: [badge, title, loc]
-        }));
-      });
-    }
-
-    // Section 2: Open Free Time Gaps
-    const fHeader = this.createElement('h4', { className: 'modal-subhead', attrs: { style: 'margin-top: 1rem;' }, text: `Open Free Time (${freeSlots.length} Slots)` });
-    modalContent.appendChild(fHeader);
-
-    if (freeSlots.length === 0) {
-      modalContent.appendChild(this.createElement('p', { className: 'modal-empty-text', text: 'No free time gaps available.' }));
-    } else {
-      freeSlots.forEach(slot => {
-        const badge = this.createElement('span', { className: ['badge', 'badge-freeslot-pill'], text: `${slot.startTime} - ${slot.endTime} (${slot.durationMinutes} min free)` });
-        const title = this.createElement('h5', { className: 'modal-item-title-sm', text: `Free Time (${slot.period})` });
-        const desc = this.createElement('p', { className: 'modal-rep-text', text: 'No events scheduled. Open time for healthy habits.' });
-        modalContent.appendChild(this.createElement('div', {
-          className: ['card-static', 'card-padded', 'modal-item-card', 'card-freeslot-border'],
-          children: [badge, title, desc]
-        }));
-      });
-    }
-
-    // Section 3: My Healthy Habit Substitutions
-    const hHeader = this.createElement('h4', { className: 'modal-subhead', attrs: { style: 'margin-top: 1rem;' }, text: `My Healthy Habits (${this.habits.length})` });
-    modalContent.appendChild(hHeader);
-
-    if (this.habits.length === 0) {
-      modalContent.appendChild(this.createElement('p', { className: 'modal-empty-text', text: 'No habits configured yet.' }));
-    } else {
-      this.habits.forEach(h => {
-        const badge = this.createElement('span', { className: ['badge', 'badge-success'], text: `Scheduled at ${h.scheduled_time || '09:00'}` });
-        const title = this.createElement('h5', { className: 'modal-item-title-sm', text: h.replacement_habit || 'Healthy Routine' });
-        const sub = this.createElement('p', { className: 'modal-rep-text', text: `Avoids: ${h.bad_habit}` });
-        modalContent.appendChild(this.createElement('div', {
-          className: ['card-static', 'card-padded', 'modal-item-card'],
-          children: [badge, title, sub]
-        }));
-      });
-    }
-
-    modal.classList.add('open');
-  }
-
-  closeModal() {
-    const modal = document.getElementById('calendar-detail-modal') || document.getElementById('habit-modal');
-    if (modal) {
-      modal.classList.remove('open');
-    }
   }
 }
 
