@@ -1,37 +1,35 @@
 /**
- * CatalogService — Suggested habit catalog data.
- * Single Responsibility: Provide and filter the replacement routine catalog.
+ * CatalogService — Catalog Client for Go Habit-Service.
+ * Single Responsibility: Retrieve evidence-based routine substitution suggestions from Go backend.
  */
 class CatalogService {
   constructor() {
-    this._catalog = [
-      { id: 'cat_01', category: 'Mindfulness', title: '5-Minute Deep Breathing', description: 'Take 10 slow, diaphragmatic breaths to downregulate cortisol and craving triggers.', icon: 'sparkles' },
-      { id: 'cat_02', category: 'Hydration', title: 'Drink a Large Glass of Cold Water', description: 'Cravings often disguise physiological thirst. Drink 350ml slowly.', icon: 'check' },
-      { id: 'cat_03', category: 'Physical Action', title: 'Do 10 Push-ups or Wall Squats', description: 'Channel nervous or agitated dopamine cravings into muscle contraction.', icon: 'fire' },
-      { id: 'cat_04', category: 'Focus & Learning', title: 'Read 5 Pages of a Book', description: 'Divert mental processing power to engaging literature or articles.', icon: 'catalog' },
-      { id: 'cat_05', category: 'Relaxation', title: 'Listen to a Calming Song', description: 'Recharge sensory input with 3 minutes of lo-fi or acoustic audio.', icon: 'clock' },
-      { id: 'cat_06', category: 'Mindfulness', title: 'Write 3 Gratitude Bullets', description: 'Jot down 3 quick positive thoughts in your notes to shift mood state.', icon: 'sparkles' }
-    ];
+    this._baseUrl = window.location.origin.includes(':8000') ? '' : 'http://localhost:8000';
   }
 
-  /**
-   * Get the full catalog.
-   * @returns {Promise<Array<Object>>}
-   */
   async getAll() {
-    return this._catalog;
+    try {
+      const res = await fetch(`${this._baseUrl}/api/v1/habits/suggestions`);
+      if (res.ok) {
+        const body = await res.json();
+        return body.data || body || [];
+      }
+    } catch (err) {
+      console.warn('Backend habit-service unreachable, loading static defaults:', err);
+    }
+
+    return CatalogService._defaults();
   }
 
-  /**
-   * Get catalog items filtered by category.
-   * @param {string} category — category name or 'all'
-   * @returns {Promise<Array<Object>>}
-   */
-  async getByCategory(category) {
-    if (!category || category === 'all') return this._catalog;
-    return this._catalog.filter(
-      item => item.category.toLowerCase() === category.toLowerCase()
-    );
+  static _defaults() {
+    return [
+      { id: 'cat_01', category: 'Health', title: '5-Minute Box Breathing', description: 'Deep cyclic box breathing to reset cortisol and curb sudden anxiety or smoking urges.', icon: 'sparkles' },
+      { id: 'cat_02', category: 'Health', title: 'Glass of Cold Water with Lemon', description: 'Immediate sensory replacement to interrupt mindless eating, snacking, and soda triggers.', icon: 'water' },
+      { id: 'cat_03', category: 'Focus', title: '2-Minute Desk Stretch & Walk', description: 'Brief physical movement break to relieve mental fatigue and resist social media scrolling.', icon: 'run' },
+      { id: 'cat_04', category: 'Focus', title: 'Write 3 Gratitude Notes', description: 'Dopamine-replacing journaling exercise when feeling overwhelmed, cynical, or unmotivated.', icon: 'pencil' },
+      { id: 'cat_05', category: 'Mindset', title: '10 Pushups or Air Squats', description: 'High-intensity physical exertion burst to burn off acute frustration and restless agitation.', icon: 'zap' },
+      { id: 'cat_06', category: 'Mindset', title: 'Read 2 Pages of a Non-Fiction Book', description: 'Productive mental stimulation routine to replace late-night doom-scrolling before sleep.', icon: 'book' }
+    ];
   }
 }
 
