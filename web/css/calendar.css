@@ -1008,3 +1008,84 @@ html, body.cal-app-body, body.cal-fullpage-layout {
     display: flex;
   }
 }
+
+/* -------------------------------------------------------------------------
+   Clean Modal & Form Helper Classes (Zero Inline Styles)
+   ------------------------------------------------------------------------- */
+.required-star {
+  color: var(--toastify-color-error, #ef4444);
+  font-weight: 700;
+}
+
+.modal-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-badge-blue {
+  font-size: 0.7rem;
+}
+
+.habit-loop-info-box {
+  display: none;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--radius-md, 8px);
+  padding: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.habit-loop-info-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--emerald-primary, #10b981);
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+
+.habit-loop-info-body {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.modal-footer-space-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-btn-group-sm {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.modal-card-scope {
+  max-width: 480px;
+}
+
+.slot-choice-card-padded {
+  cursor: pointer;
+  padding: 0.85rem 1rem;
+}
+
+.slot-choice-card-spaced {
+  cursor: pointer;
+  margin-top: 0.75rem;
+  padding: 0.85rem 1rem;
+}
+
+.gcal-box-spaced {
+  margin-top: 1rem;
+}
+
+.form-group-spaced {
+  margin-top: 0.5rem;
+}
+
+.modal-btn-hidden {
+  display: none;
+}
+
+
