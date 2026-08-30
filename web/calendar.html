@@ -7,71 +7,464 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/calendar.css">
 </head>
-<body class="sidebar-layout">
-  <div id="navbar-container"></div>
+<body class="cal-app-body">
+  <div class="cal-layout-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="cal-sidebar" id="cal-sidebar">
+      <div class="cal-sidebar-top">
+        <a href="/" class="cal-sidebar-brand" title="Habitizer Home">
+          <div class="brand-logo-icon">
+            <span data-icon="logo" data-size="22"></span>
+          </div>
+          <div class="brand-text-group">
+            <span class="brand-title">Habitizer</span>
+            <span class="brand-tagline">Habit Substitution</span>
+          </div>
+        </a>
 
-  <main class="page-content">
-    <!-- Calendar Card -->
-    <div class="calendar-card">
-      <div class="calendar-toolbar">
-        <div class="calendar-title-group">
-          <button class="calendar-nav-btn" id="cal-prev-btn" aria-label="Previous Month">◀</button>
-          <span class="calendar-month-title" id="cal-month-title">August 2026</span>
-          <button class="calendar-nav-btn" id="cal-next-btn" aria-label="Next Month">▶</button>
+        <!-- User Profile Pill in Sidebar -->
+        <a href="/profile" class="cal-sidebar-user-pill" id="cal-sidebar-user" title="View Profile">
+          <div class="user-avatar-circle" id="cal-sidebar-avatar">A</div>
+          <div class="cal-user-info">
+            <span class="cal-user-name" id="cal-sidebar-name">Alex Doe</span>
+            <span class="cal-user-tier" id="cal-sidebar-tier">Free Plan</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Navigation Items (Calendar, Shop, About Us) -->
+      <nav class="cal-sidebar-nav">
+        <a href="/calendar" class="cal-nav-item active" id="nav-calendar">
+          <span data-icon="calendar" data-size="18"></span>
+          <span>Calendar</span>
+        </a>
+        <a href="/shop" class="cal-nav-item" id="nav-shop">
+          <span data-icon="economy" data-size="18"></span>
+          <span>Shop</span>
+        </a>
+        <a href="/about" class="cal-nav-item" id="nav-about">
+          <span data-icon="faq" data-size="18"></span>
+          <span>About Us</span>
+        </a>
+      </nav>
+
+      <!-- Sidebar Footer Controls -->
+      <div class="cal-sidebar-footer">
+        <button class="cal-sidebar-action-btn" id="cal-theme-toggle-btn" title="Toggle Dark / Light Theme">
+          <span data-icon="moon" data-size="18"></span>
+          <span id="cal-theme-text">Toggle Theme</span>
+        </button>
+        <button class="cal-sidebar-action-btn cal-logout-btn" id="cal-logout-btn" title="Log Out">
+          <span data-icon="exit" data-size="18"></span>
+          <span>Log Out</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Calendar Workspace -->
+    <div class="cal-main-workspace">
+      <!-- Calendar Top Bar -->
+      <header class="cal-app-header">
+        <div class="cal-nav-left">
+          <button class="cal-sidebar-mobile-toggle" id="cal-sidebar-mobile-toggle" aria-label="Toggle Sidebar Navigation">
+            <span data-icon="menu" data-size="20"></span>
+          </button>
+
+          <div class="cal-date-navigator">
+            <button class="calendar-nav-btn" id="cal-prev-btn" aria-label="Previous">
+              <span data-icon="chevronLeft" data-size="14"></span>
+            </button>
+            <span class="calendar-month-title" id="cal-month-title">August 24 - 30, 2026</span>
+            <button class="calendar-nav-btn" id="cal-next-btn" aria-label="Next">
+              <span data-icon="chevronRight" data-size="14"></span>
+            </button>
+            <button class="btn btn-secondary btn-xs" id="cal-today-btn">Today</button>
+          </div>
         </div>
 
-        <div class="view-btn-group">
-          <button class="view-btn active" data-view="month">Month</button>
-          <button class="view-btn" data-view="week">Week</button>
-          <button class="view-btn" data-view="3day">3-Day</button>
-          <button class="view-btn" data-view="day">Day</button>
+        <div class="cal-nav-center">
+          <div class="view-btn-group">
+            <button class="view-btn active" data-view="week">Week</button>
+            <button class="view-btn" data-view="3day">3-Day</button>
+            <button class="view-btn" data-view="day">Day</button>
+            <button class="view-btn" data-view="month">Month</button>
+          </div>
         </div>
 
-        <div class="calendar-header-actions">
-          <a href="/checkin" class="btn btn-secondary btn-sm">
-            <span data-icon="checkin" data-size="16"></span> Quick Check-In
+        <div class="cal-nav-right">
+          <!-- Google Calendar Sync Button -->
+          <button class="btn btn-secondary btn-sm cal-gcal-pill-btn" id="btn-open-gcal-modal" title="Google Calendar Sync">
+            <span data-icon="google" data-size="15"></span>
+            <span class="gcal-btn-label">Google Calendar</span>
+            <span class="badge badge-google-active" id="cal-sync-status-badge">Connected</span>
+          </button>
+
+          <button class="btn btn-primary btn-sm" id="btn-auto-fit-habits" title="Refresh schedule">
+            <span data-icon="refresh" data-size="14"></span> Refresh
+          </button>
+
+          <a href="/create" class="btn btn-secondary btn-sm" title="Add Routine">
+            <span data-icon="plus" data-size="15"></span> Add Habit
           </a>
-          <a href="/create" class="btn btn-primary btn-sm">
-            <span data-icon="plus" data-size="16"></span> Add Routine
-          </a>
         </div>
-      </div>
+      </header>
 
-      <div id="calendar-view-container">
-        <!-- Injected via CalendarGridComponent in calendar.js -->
-      </div>
+      <!-- Calendar Body -->
+      <main class="cal-fullpage-main">
+        <div class="cal-fullpage-body">
+          <div id="calendar-view-container">
+            <!-- Injected via CalendarGridComponent in calendar.js -->
+          </div>
+        </div>
+
+        <!-- Legend Bar -->
+        <footer class="cal-fullpage-legend">
+          <div class="legend-item">
+            <span class="legend-dot legend-dot-google"></span>
+            <span>Google Calendar Event</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot legend-dot-freeslot"></span>
+            <span>Open Free Time</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot legend-dot-emerald"></span>
+            <span>Healthy Habit Routine</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot legend-dot-amber"></span>
+            <span>Meeting Conflict</span>
+          </div>
+          <div class="legend-item" style="margin-left: auto; color: var(--text-muted); font-size: 0.76rem;">
+            Tip: Click any time slot to add events/habits • Drag cards to reschedule
+          </div>
+        </footer>
+      </main>
     </div>
+  </div>
 
-    <!-- Legend -->
-    <div class="card-static card-padded legend-card">
-      <div class="legend-item">
-        <span class="legend-dot legend-dot-emerald"></span>
-        <span>Substituted Healthy Routine</span>
-      </div>
-      <div class="legend-item">
-        <span class="legend-dot legend-dot-amber"></span>
-        <span>Streak Freeze Protected</span>
-      </div>
-      <div class="legend-item">
-        <span class="legend-dot legend-dot-indigo"></span>
-        <span>Scheduled Alert Time</span>
-      </div>
-    </div>
-  </main>
-
-  <!-- Habit Details Modal -->
-  <div id="calendar-detail-modal" class="modal-overlay">
-    <div class="modal-card">
+  <!-- Interactive Slot Creation Modal (Habit vs Calendar Event) -->
+  <div id="calendar-slot-create-modal" class="modal-overlay">
+    <div class="modal-card modal-card-md">
       <div class="modal-header">
-        <h3 class="modal-title" id="modal-habit-date">Habit Details</h3>
-        <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+        <h3 class="modal-title" id="slot-modal-title">
+          <span data-icon="plus" data-size="18"></span> Add to Calendar
+        </h3>
+        <button class="modal-close-btn" id="slot-modal-close-x">&times;</button>
       </div>
-      <div id="modal-habit-content" class="modal-content-list">
-        <!-- Injected dynamically via CalendarGridComponent -->
+
+      <!-- Step 1: Choice View -->
+      <div class="modal-body-padded" id="slot-modal-step-choice">
+        <p class="modal-help-text" id="slot-modal-time-label">
+          Selected time slot: <strong>Friday, Aug 28 at 14:00</strong>
+        </p>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          What would you like to add into this time slot?
+        </p>
+
+        <div class="slot-choice-cards">
+          <!-- Choice A: Habit Substitution -->
+          <div class="slot-choice-card" id="btn-choice-habit">
+            <div class="slot-choice-icon choice-icon-habit">
+              <span data-icon="sparkles" data-size="24"></span>
+            </div>
+            <div class="slot-choice-info">
+              <h4 class="slot-choice-title">Healthy Habit Substitution Loop</h4>
+              <p class="slot-choice-desc">
+                Replace a bad habit cue with an evidence-based healthy routine and unlock neuro-rewards.
+              </p>
+            </div>
+            <span class="slot-choice-arrow">&rarr;</span>
+          </div>
+
+          <!-- Choice B: Calendar Event -->
+          <div class="slot-choice-card" id="btn-choice-event">
+            <div class="slot-choice-icon choice-icon-event">
+              <span data-icon="calendar" data-size="24"></span>
+            </div>
+            <div class="slot-choice-info">
+              <h4 class="slot-choice-title">Calendar Event / Meeting</h4>
+              <p class="slot-choice-desc">
+                Schedule a meeting, appointment, focus block, or personal event directly on your timetable.
+              </p>
+            </div>
+            <span class="slot-choice-arrow">&rarr;</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Event Details Form -->
+      <div class="modal-body-padded" id="slot-modal-step-form" style="display: none;">
+        <form id="slot-event-form">
+          <div class="form-group">
+            <label class="form-label" for="slot-ev-title">
+              Event Title <span style="color: #ef4444; font-weight: bold;">*</span>
+            </label>
+            <input type="text" id="slot-ev-title" class="form-input" placeholder="e.g. Coffee with Sarah, Dentist appointment, Team lunch" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="slot-ev-desc">Event Description</label>
+            <textarea id="slot-ev-desc" class="form-textarea" rows="2" placeholder="e.g. Catch up on the weekend trip, bring the project notes"></textarea>
+          </div>
+
+          <div class="form-row-2col">
+            <div class="form-group">
+              <label class="form-label" for="slot-ev-date">Date</label>
+              <input type="date" id="slot-ev-date" class="form-input" value="2026-08-28">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="slot-ev-tag">Category / Tag</label>
+              <select id="slot-ev-tag" class="form-input">
+                <option value="Work">Work</option>
+                <option value="Personal">Personal</option>
+                <option value="Meeting">Meeting</option>
+                <option value="Focus">Deep Focus</option>
+                <option value="Health">Health &amp; Wellness</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row-2col">
+            <div class="form-group">
+              <label class="form-label" for="slot-ev-start">Start Time</label>
+              <input type="time" id="slot-ev-start" class="form-input" value="14:00">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="slot-ev-end">End Time</label>
+              <input type="time" id="slot-ev-end" class="form-input" value="15:00">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="slot-ev-loc">Place / Location</label>
+            <input type="text" id="slot-ev-loc" class="form-input" placeholder="e.g. Blue Bottle Cafe, Room 402, Gym Downtown">
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer" id="slot-modal-footer">
+        <button class="btn btn-secondary btn-sm" id="slot-modal-btn-cancel">Cancel</button>
+        <button class="btn btn-secondary btn-sm" id="slot-modal-btn-back" style="display: none;">Back</button>
+        <button class="btn btn-primary btn-sm" id="slot-modal-btn-submit" style="display: none;">
+          <span data-icon="check" data-size="14"></span> Create Event
+        </button>
       </div>
     </div>
   </div>
 
+  <!-- Google Calendar Connection Modal -->
+  <div id="google-sync-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <span data-icon="google" data-size="20"></span> Google Calendar Sync
+        </h3>
+        <button class="modal-close-btn" id="gcal-modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body-padded">
+        <p class="modal-help-text">
+          Habitizer reads your Google Calendar busy periods and intelligently discovers free time gaps throughout the day to schedule your healthy habit substitutions.
+        </p>
+
+        <!-- Method 1: iCal Link -->
+        <div class="gcal-option-box">
+          <h4 class="gcal-option-title">Option 1: Paste Google Calendar iCal / ICS Feed Link</h4>
+          <p class="gcal-option-help">
+            From Google Calendar on desktop: <strong>Settings &gt; Integrate Calendar &gt; "Secret address in iCal format"</strong> (or Public address).
+          </p>
+          <div class="form-group" style="margin-top: 0.5rem;">
+            <input type="url" id="gcal-ical-input" class="form-input" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics">
+          </div>
+          <button class="btn btn-primary btn-sm btn-full" id="btn-save-ical-url">
+            <span data-icon="check" data-size="14"></span> Connect &amp; Ingest Feed
+          </button>
+        </div>
+
+        <!-- Method 2: Google Account -->
+        <div class="gcal-option-box" style="margin-top: 1rem;">
+          <h4 class="gcal-option-title">Option 2: Sign In with Google</h4>
+          <p class="gcal-option-help">
+            Authorize Habitizer to automatically read your primary calendar schedule.
+          </p>
+          <div class="form-group" style="margin-top: 0.5rem;">
+            <input type="email" id="gcal-email-input" class="form-input" placeholder="alex.doe@gmail.com">
+          </div>
+          <button class="btn btn-secondary btn-sm btn-full" id="btn-oauth-gcal">
+            <span data-icon="google" data-size="14"></span> Authorize Google Account
+          </button>
+        </div>
+
+        <!-- Demo Schedule -->
+        <div class="gcal-demo-box" style="margin-top: 1rem;">
+          <p class="gcal-demo-text">
+            Need a test calendar? Load a realistic demonstration schedule with standups, UX reviews, deep work blocks, and team retros.
+          </p>
+          <button class="btn btn-secondary btn-xs btn-full" id="btn-load-demo-gcal">
+            <span data-icon="sparkles" data-size="12"></span> Load Sample Google Calendar Events
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" id="btn-disconnect-gcal">Disconnect Calendar</button>
+        <button class="btn btn-primary btn-sm" id="btn-close-gcal-modal">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Detail & Edit Modal -->
+  <div id="calendar-event-edit-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group" style="display: flex; align-items: center; gap: 0.5rem;">
+          <span data-icon="calendar" data-size="18"></span>
+          <h3 class="modal-title" id="edit-modal-title-text">Event Details</h3>
+          <span class="badge badge-blue" id="edit-modal-badge" style="font-size: 0.7rem;">Event</span>
+        </div>
+        <button class="modal-close-btn" id="edit-modal-close-x">&times;</button>
+      </div>
+
+      <div class="modal-body-padded">
+        <form id="edit-event-form">
+          <input type="hidden" id="edit-ev-id">
+          <input type="hidden" id="edit-ev-type">
+
+          <!-- Habit Loop Info Card (Shown for Habit items) -->
+          <div id="edit-habit-loop-info" style="display: none; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 0.85rem; margin-bottom: 1rem;">
+            <div style="font-size: 0.78rem; font-weight: 800; color: var(--emerald-primary, #10b981); text-transform: uppercase; margin-bottom: 0.35rem;">
+              Habit Substitution Loop
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-primary); line-height: 1.4;" id="edit-habit-loop-details">
+              <!-- Injected dynamically -->
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="edit-ev-title">
+              Title <span style="color: #ef4444; font-weight: bold;">*</span>
+            </label>
+            <input type="text" id="edit-ev-title" class="form-input" placeholder="e.g. Coffee with Sarah, Dentist appointment" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="edit-ev-desc">Description</label>
+            <textarea id="edit-ev-desc" class="form-textarea" rows="2" placeholder="e.g. Catch up on the weekend trip, bring the project notes"></textarea>
+          </div>
+
+          <div class="form-row-2col">
+            <div class="form-group">
+              <label class="form-label" for="edit-ev-date">Date</label>
+              <input type="date" id="edit-ev-date" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="edit-ev-tag">Category / Tag</label>
+              <select id="edit-ev-tag" class="form-input">
+                <option value="Work">Work</option>
+                <option value="Personal">Personal</option>
+                <option value="Meeting">Meeting</option>
+                <option value="Focus">Deep Focus</option>
+                <option value="Health">Health &amp; Wellness</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row-2col">
+            <div class="form-group">
+              <label class="form-label" for="edit-ev-start">Start Time</label>
+              <input type="time" id="edit-ev-start" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="edit-ev-end">End Time</label>
+              <input type="time" id="edit-ev-end" class="form-input">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="edit-ev-loc">Place / Location</label>
+            <input type="text" id="edit-ev-loc" class="form-input" placeholder="e.g. Blue Bottle Cafe, Room 402, Gym Downtown">
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <button class="btn btn-danger btn-sm" id="btn-delete-event">
+          <span data-icon="trash" data-size="14"></span> Delete Event
+        </button>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-secondary btn-sm" id="btn-cancel-edit-event">Cancel</button>
+          <button class="btn btn-primary btn-sm" id="btn-save-edit-event">
+            <span data-icon="check" data-size="14"></span> Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reschedule Scope Modal (3-Point Choice) -->
+  <div id="calendar-reschedule-scope-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Reschedule Occurrence</h3>
+        <button class="modal-close-btn" id="scope-modal-close-x">&times;</button>
+      </div>
+
+      <div class="modal-body-padded">
+        <p class="modal-help-text" id="scope-modal-help-text" style="font-size: 0.9rem; margin-bottom: 1.25rem;">
+          You are moving this item to a new time. Which occurrences would you like to update?
+        </p>
+
+        <div class="slot-choice-cards">
+          <!-- Choice 1: Only this event -->
+          <div class="slot-choice-card" id="btn-scope-single" style="cursor: pointer; padding: 0.85rem 1rem;">
+            <div class="slot-choice-info">
+              <h4 class="slot-choice-title">1. Only this event</h4>
+              <p class="slot-choice-desc">Change the time for this specific day only without affecting other days.</p>
+            </div>
+          </div>
+
+          <!-- Choice 2: This and following events -->
+          <div class="slot-choice-card" id="btn-scope-future" style="cursor: pointer; margin-top: 0.75rem; padding: 0.85rem 1rem;">
+            <div class="slot-choice-info">
+              <h4 class="slot-choice-title">2. This and all future events</h4>
+              <p class="slot-choice-desc">Update this event and all upcoming occurrences from this date onwards.</p>
+            </div>
+          </div>
+
+          <!-- Choice 3: All events in the series -->
+          <div class="slot-choice-card" id="btn-scope-all" style="cursor: pointer; margin-top: 0.75rem; padding: 0.85rem 1rem;">
+            <div class="slot-choice-info">
+              <h4 class="slot-choice-title">3. All events in the series</h4>
+              <p class="slot-choice-desc">Update every occurrence across the entire schedule series.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm btn-full" id="btn-scope-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily Log Modal -->
+  <div id="calendar-detail-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-habit-date">Daily Log</h3>
+        <button class="modal-close-btn" id="modal-close-x-btn">&times;</button>
+      </div>
+      <div class="modal-body-padded" id="modal-habit-content">
+        <!-- Injected via CalendarGridComponent -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" id="modal-close-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Modules -->
   <script src="/js/icons.js"></script>
   <!-- Core Layer -->
   <script src="/js/core/StorageService.js"></script>
@@ -85,13 +478,11 @@
   <script src="/js/services/EconomyService.js"></script>
   <script src="/js/services/StreakService.js"></script>
   <script src="/js/services/CatalogService.js"></script>
+  <script src="/js/services/CalendarService.js"></script>
   <!-- UI Components -->
   <script src="/js/components/UIComponent.js"></script>
   <script src="/js/components/ToastComponent.js"></script>
   <script src="/js/components/NavbarComponent.js"></script>
-  <script src="/js/components/HabitCardComponent.js"></script>
-  <script src="/js/components/StatsGridComponent.js"></script>
-  <script src="/js/components/CatalogCardComponent.js"></script>
   <script src="/js/components/CalendarGridComponent.js"></script>
   <script src="/js/components/PremiumModalComponent.js"></script>
   <!-- API Facade & Page Controller -->
