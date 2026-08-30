@@ -25,11 +25,12 @@
   const backendSync  = new BackendSync();
 
   // --- Instantiate Services ---
-  const authService    = new AuthService(storage, userRepo, stateRepo, backendSync);
-  const habitService   = new HabitService(authService, stateRepo, backendSync);
-  const economyService = new EconomyService(authService, stateRepo);
-  const streakService  = new StreakService(authService, stateRepo);
-  const catalogService = new CatalogService();
+  const authService     = new AuthService(storage, userRepo, stateRepo, backendSync);
+  const habitService    = new HabitService(authService, stateRepo, backendSync);
+  const economyService  = new EconomyService(authService, stateRepo);
+  const streakService   = new StreakService(authService, stateRepo);
+  const catalogService  = new CatalogService();
+  const calendarService = new CalendarService(authService, stateRepo, backendSync);
 
   // --- Public Facade ---
   // Preserves the exact same method signatures that page controllers call.
@@ -46,7 +47,9 @@
     // Habits
     getHabits:        ()                       => habitService.getAll(),
     createHabit:      (data)                   => habitService.create(data),
+    updateHabit:      (id, updates)            => habitService.update(id, updates),
     deleteHabit:      (id)                     => habitService.delete(id),
+    updateHabitTime:  (id, newTime)            => habitService.updateScheduledTime(id, newTime),
 
     // Economy
     getEconomy:       ()                       => economyService.getBalance(),
@@ -59,7 +62,21 @@
     submitDailyCheckin: (data)                  => streakService.submitCheckin(data),
 
     // Catalog
-    getCatalog:       ()                       => catalogService.getAll()
+    getCatalog:       ()                       => catalogService.getAll(),
+
+    // Google Calendar & Smart Scheduler
+    isCalendarConnected:            ()                 => calendarService.isConnected(),
+    getCalendarSyncInfo:            ()                 => calendarService.getSyncInfo(),
+    getCalendarEvents:              ()                 => calendarService.getEvents(),
+    addCalendarEvent:               (data)             => calendarService.addEvent(data),
+    updateCalendarEvent:            (id, updates)      => calendarService.updateEvent(id, updates),
+    deleteCalendarEvent:            (id)               => calendarService.deleteEvent(id),
+    connectCalendarIcal:            (url)              => calendarService.connectWithIcalUrl(url),
+    connectCalendarGoogle:          (email)            => calendarService.connectWithGoogleAccount(email),
+    disconnectCalendar:             ()                 => calendarService.disconnect(),
+    getFreeSlots:                   (date, ev, s, e)   => calendarService.getFreeSlotsForDate(date, ev, s, e),
+    detectCalendarConflicts:        (h, ev, date)      => calendarService.detectConflicts(h, ev, date),
+    autoScheduleHabitsIntoFreeSlots: (date)             => calendarService.autoScheduleHabitsIntoFreeSlots(date)
   };
 
   window.API = API;
