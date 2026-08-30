@@ -69,3 +69,30 @@ type DailyCheckinResponse struct {
 	SuggestedReplacement   string        `json:"suggested_replacement,omitempty"`
 	PromotionSuggestionMsg string        `json:"promotion_suggestion_msg,omitempty"`
 }
+
+type CalendarEventDTO struct {
+	ID          string `json:"id"`
+	Title       string `json:"title"`
+	Date        string `json:"date"`
+	StartTime   string `json:"start_time"`
+	EndTime     string `json:"end_time"`
+	Location    string `json:"location"`
+	Description string `json:"description"`
+}
+
+type AutoScheduleDTO struct {
+	UserID string             `json:"user_id"`
+	Date   string             `json:"date"`
+	Events []CalendarEventDTO `json:"events"`
+}
+
+type UpdateHabitTimeDTO struct {
+	HabitID       string `json:"habit_id"`
+	ScheduledTime string `json:"scheduled_time"`
+}
+
+type AutoScheduleResponseDTO struct {
+	Habits           []*Habit `json:"habits"`
+	AdjustmentsCount int      `json:"adjustments_count"`
+	Message          string   `json:"message"`
+}

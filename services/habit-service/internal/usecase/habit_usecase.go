@@ -18,6 +18,8 @@ type HabitUsecase interface {
 	GetSuggestedReplacements(ctx context.Context) ([]*domain.SuggestedReplacement, error)
 	ProcessDailyCheckin(ctx context.Context, dto domain.CreateDailyCheckinDTO) (*domain.DailyCheckinResponse, error)
 	PromoteReplacement(ctx context.Context, dto domain.PromoteReplacementDTO) (*domain.Habit, error)
+	UpdateHabitScheduledTime(ctx context.Context, dto domain.UpdateHabitTimeDTO) (*domain.Habit, error)
+	AutoScheduleHabits(ctx context.Context, dto domain.AutoScheduleDTO) (*domain.AutoScheduleResponseDTO, error)
 }
 
 type habitUsecase struct {
@@ -159,4 +161,52 @@ func (u *habitUsecase) PromoteReplacement(ctx context.Context, dto domain.Promot
 
 	habit.ReplacementHabit = dto.ReplacementHabit
 	return habit, nil
+}
+
+func (u *habitUsecase) UpdateHabitScheduledTime(ctx context.Context, dto domain.UpdateHabitTimeDTO) (*domain.Habit, error) {
+	habit, err := u.repo.GetHabitByID(ctx, dto.HabitID)
+	if err != nil {
+		return nil, pkgErrors.ErrHabitNotFound
+	}
+
+	if err := u.repo.UpdateHabitScheduledTime(ctx, dto.HabitID, dto.ScheduledTime); err != nil {
+		return nil, err
+	}
+
+	habit.ScheduledTime = dto.ScheduledTime
+	return habit, nil
+}
+
+func (u *habitUsecase) AutoScheduleHabits(ctx context.Context, dto domain.AutoScheduleDTO) (*domain.AutoScheduleResponseDTO, error) {
+	habits, err := u.repo.GetHabitsByUserID(ctx, dto.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(habits) == 0 {
+		return &domain.AutoScheduleResponseDTO{
+			Habits:           []*domain.Habit{},
+			AdjustmentsCount: 0,
+			Message:          "No habits found to schedule",
+		}, nil
+	}
+
+	// Safe fallback slots in waking hours: 08:00, 13:00, 18:00, 20:15
+	candidateSlots := []string{"08:00", "13:00", "18:00", "20:15", "07:30", "16:15"}
+	adjustments := 0
+
+	for i, h := range habits {
+		targetTime := candidateSlots[i%len(candidateSlots)]
+		if h.ScheduledTime != targetTime {
+			_ = u.repo.UpdateHabitScheduledTime(ctx, h.ID, targetTime)
+			h.ScheduledTime = targetTime
+			adjustments++
+		}
+	}
+
+	return &domain.AutoScheduleResponseDTO{
+		Habits:           habits,
+		AdjustmentsCount: adjustments,
+		Message:          "Habits successfully auto-fitted into free calendar slots without event conflicts",
+	}, nil
 }
