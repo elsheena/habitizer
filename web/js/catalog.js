@@ -1,10 +1,10 @@
 /**
  * Habitizer Replacement Catalog Controller
+ * Single Responsibility: Manage catalog routine filtering and render CatalogCardComponents using DOM APIs.
  */
-
 document.addEventListener('DOMContentLoaded', async () => {
-  if (window.Sidebar) {
-    Sidebar.render('catalog');
+  if (window.Navbar) {
+    window.Navbar.render('catalog');
   }
 
   const grid = document.getElementById('catalog-grid');
@@ -21,39 +21,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function renderCatalog() {
     if (!grid) return;
-    const filtered = activeCategory === 'all' 
-      ? fullCatalog 
+    grid.textContent = '';
+
+    const filtered = activeCategory === 'all'
+      ? fullCatalog
       : fullCatalog.filter(item => item.category.toLowerCase() === activeCategory.toLowerCase());
 
-    grid.innerHTML = filtered.map(item => `
-      <div class="catalog-card card-interactive">
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-          <div class="catalog-card-icon">
-            <span data-icon="${item.icon || 'sparkles'}" data-size="22"></span>
-          </div>
-          <span class="habit-category-tag">${item.category}</span>
-        </div>
-        <div class="catalog-card-title">${item.title}</div>
-        <div class="catalog-card-desc">${item.description}</div>
-        <div style="margin-top: auto; padding-top: 0.75rem;">
-          <button class="btn btn-secondary btn-sm btn-adopt-routine" data-title="${item.title}" style="width: 100%;">
-            <span data-icon="plus" data-size="14"></span> Adopt as Routine
-          </button>
-        </div>
-      </div>
-    `).join('');
-
-    if (window.Icons) Icons.renderAll();
-
-    document.querySelectorAll('.btn-adopt-routine').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const title = e.currentTarget.getAttribute('data-title');
-        if (window.Toast) Toast.show(`Selected "${title}". Redirecting to Habit Builder...`, 'success');
-        setTimeout(() => {
-          window.location.href = `/create`;
-        }, 600);
+    filtered.forEach(item => {
+      const cardComp = new CatalogCardComponent(item, {
+        onAdopt: (selectedItem) => {
+          if (window.Toast) {
+            window.Toast.show(`Selected "${selectedItem.title}". Redirecting to Habit Builder...`, 'success');
+          }
+          setTimeout(() => {
+            window.location.href = '/create';
+          }, 500);
+        }
       });
+      grid.appendChild(cardComp.element);
     });
+
+    if (window.Icons) window.Icons.renderAll();
   }
 
   filterBtns.forEach(btn => {
