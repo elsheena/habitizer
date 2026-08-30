@@ -97,25 +97,28 @@
           </div>
         </div>
 
-        <!-- Google Calendar Integration (Mock Only) -->
+        <!-- Google Calendar Integration -->
         <div class="card-static card-padded" id="cal-sync-card">
           <div class="integration-header-row">
             <div class="integration-title-group">
               <div class="integration-icon-box">
-                <span data-icon="calendar" data-size="18"></span>
+                <span data-icon="google" data-size="18"></span>
               </div>
               <div>
                 <h4 class="integration-title">Google Calendar Sync</h4>
-                <p class="integration-desc">Avoid scheduling routine alerts during busy calendar events.</p>
+                <p class="integration-desc" id="cal-sync-desc">Avoids busy meetings and auto-places good habits in free time slots.</p>
               </div>
             </div>
             <span class="badge badge-success" id="cal-sync-badge">Connected</span>
           </div>
 
-          <div class="integration-action-row">
+          <div class="integration-action-row" style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
             <button class="btn btn-secondary btn-sm" id="btn-toggle-cal-sync">
               Toggle Calendar Sync
             </button>
+            <a href="/calendar" class="btn btn-primary btn-sm">
+              <span data-icon="calendar" data-size="14"></span> View Free Slots
+            </a>
           </div>
         </div>
       </div>
@@ -165,6 +168,7 @@
   <script src="/js/services/EconomyService.js"></script>
   <script src="/js/services/StreakService.js"></script>
   <script src="/js/services/CatalogService.js"></script>
+  <script src="/js/services/CalendarService.js"></script>
   <!-- UI Components -->
   <script src="/js/components/UIComponent.js"></script>
   <script src="/js/components/ToastComponent.js"></script>
