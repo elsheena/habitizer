@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const isPro = user.tier === 'premium' || user.plan === 'pro';
 
       if (tierBadge) {
-        tierBadge.textContent = isPro ? '★ Habitizer Pro (Unlimited)' : 'Free Starter (3 Habits)';
+        tierBadge.textContent = isPro ? 'Habitizer Pro (Unlimited)' : 'Free Starter (3 Habits)';
         tierBadge.className = `tier-badge ${isPro ? 'tier-premium' : 'tier-free'}`;
       }
 
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const openModalBtn = document.getElementById('btn-open-premium-modal');
       if (openModalBtn) {
-        openModalBtn.textContent = isPro ? '★ Manage Pro Membership' : '⚡ Compare Plans & Upgrade';
+        openModalBtn.textContent = isPro ? 'Manage Pro Membership' : 'Compare Plans & Upgrade';
         openModalBtn.onclick = () => {
           if (window.PremiumModal) window.PremiumModal.open();
         };
@@ -75,10 +75,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (rateDisplay) rateDisplay.textContent = `${streaks.success_rate}`;
       if (progressBar) progressBar.style.width = streaks.success_rate;
 
-      const isMock = user.id === 'usr_demo_88' || Boolean(user.is_mock);
-      if (toggleTierBtn) toggleTierBtn.classList.toggle('hidden-control', !isMock);
-      const calSyncCard = document.getElementById('cal-sync-card');
-      if (calSyncCard) calSyncCard.classList.toggle('hidden-section', !isMock);
+      const syncInfo = await window.API.getCalendarSyncInfo();
+      if (calBadge) {
+        calBadge.textContent = syncInfo.connected ? `Connected (${syncInfo.eventCount} Events)` : 'Disconnected';
+        calBadge.className = `badge ${syncInfo.connected ? 'badge-success' : 'badge-gray'}`;
+      }
 
       fullCatalog = await window.API.getCatalog();
       renderSuggestedHabits();
@@ -134,13 +135,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (toggleCalBtn) {
     toggleCalBtn.addEventListener('click', async () => {
-      const isSynced = calBadge ? calBadge.textContent.includes('Connected') : false;
-      const nextState = !isSynced;
-      if (calBadge) {
-        calBadge.textContent = nextState ? 'Connected' : 'Disconnected';
-        calBadge.className = `badge ${nextState ? 'badge-success' : 'badge-gray'}`;
+      const isConnected = await window.API.isCalendarConnected();
+      if (isConnected) {
+        await window.API.disconnectCalendar();
+        if (window.Toast) window.Toast.show('Google Calendar disconnected', 'info');
+      } else {
+        const user = await window.API.getCurrentUser();
+        await window.API.connectCalendarGoogle(user.email);
+        if (window.Toast) window.Toast.show('Google Calendar connected (4 busy events synced)', 'success');
       }
-      if (window.Toast) window.Toast.show(`Google Calendar ${nextState ? 'connected' : 'disconnected'}`, 'info');
+      await updateProfile();
     });
   }
 });

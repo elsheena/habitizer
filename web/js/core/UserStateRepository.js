@@ -76,7 +76,11 @@ class UserStateRepository {
         total_screen_time_earned_mins: 0
       },
       checkins: {},
-      googleCalendarSynced: false
+      googleCalendarSynced: false,
+      googleCalendarUrl: '',
+      googleCalendarEmail: '',
+      googleCalendarLastSync: null,
+      calendarEvents: []
     };
   }
 
@@ -91,7 +95,7 @@ class UserStateRepository {
           id: 'hab_01',
           bad_habit: 'Late night junk food snacking',
           frequency: 'daily',
-          scheduled_time: '22:30',
+          scheduled_time: '20:15',
           cue_trigger: 'Stress or boredom after 10 PM',
           replacement_habit: 'Drink chamomile tea & 5 min breathing',
           reward: '15 min gaming pass tomorrow',
@@ -103,7 +107,7 @@ class UserStateRepository {
           id: 'hab_02',
           bad_habit: 'Endless social media scrolling in bed',
           frequency: 'daily',
-          scheduled_time: '23:00',
+          scheduled_time: '13:00',
           cue_trigger: 'Lying in bed with phone in hand',
           replacement_habit: 'Read 5 pages of Kindle novel',
           reward: 'Logged in habit diary',
@@ -115,7 +119,7 @@ class UserStateRepository {
           id: 'hab_03',
           bad_habit: 'Skipping morning posture stretches',
           frequency: 'daily',
-          scheduled_time: '08:15',
+          scheduled_time: '08:00',
           cue_trigger: 'Sitting at desk immediately upon waking',
           replacement_habit: '10-minute cat-cow & hamstring stretch',
           reward: 'Fresh espresso cup',
@@ -137,7 +141,52 @@ class UserStateRepository {
         total_screen_time_earned_mins: 45
       },
       checkins: {},
-      googleCalendarSynced: true
+      googleCalendarSynced: true,
+      googleCalendarUrl: 'https://calendar.google.com/calendar/ical/alex.doe%40habitizer.io/public/basic.ics',
+      googleCalendarEmail: 'alex.doe@habitizer.io',
+      googleCalendarLastSync: '2026-08-28T08:00:00.000Z',
+      calendarEvents: [
+        {
+          id: 'gcal_standup_01',
+          title: 'Daily Engineering Standup',
+          date: '2026-08-28',
+          startTime: '09:00',
+          endTime: '09:45',
+          location: 'Google Meet',
+          description: 'Sprint updates, blockers, and architecture alignment.',
+          isGoogleEvent: true
+        },
+        {
+          id: 'gcal_design_02',
+          title: 'Product Design & UX Review',
+          date: '2026-08-28',
+          startTime: '11:00',
+          endTime: '12:15',
+          location: 'Room 402 / Meet',
+          description: 'Reviewing interactive habit calendar UI components.',
+          isGoogleEvent: true
+        },
+        {
+          id: 'gcal_deepwork_03',
+          title: 'Focus Deep Work Block',
+          date: '2026-08-28',
+          startTime: '14:30',
+          endTime: '16:00',
+          location: 'Desk',
+          description: 'Core backend microservice engineering.',
+          isGoogleEvent: true
+        },
+        {
+          id: 'gcal_sync_04',
+          title: 'Team Retrospective & Demo',
+          date: '2026-08-28',
+          startTime: '16:45',
+          endTime: '17:45',
+          location: 'Virtual Hangout',
+          description: 'Weekly team celebration and demo session.',
+          isGoogleEvent: true
+        }
+      ]
     };
   }
 }

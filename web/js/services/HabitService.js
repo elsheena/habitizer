@@ -68,6 +68,42 @@ class HabitService {
   }
 
   /**
+   * Update a habit record.
+   * @param {string} habitId
+   * @param {Object} updates
+   * @returns {Promise<Object|null>}
+   */
+  async update(habitId, updates) {
+    const user = await this._auth.getCurrentUser();
+    const state = this._stateRepo.load(user.id);
+    const target = state.habits.find(h => h.id === habitId);
+    if (target) {
+      Object.assign(target, updates);
+      this._stateRepo.save(user.id, state);
+      return target;
+    }
+    return null;
+  }
+
+  /**
+   * Update the scheduled time for a habit (e.g. when auto-scheduled into a free slot).
+   * @param {string} habitId
+   * @param {string} newTime
+   * @returns {Promise<Object|null>}
+   */
+  async updateScheduledTime(habitId, newTime) {
+    const user = await this._auth.getCurrentUser();
+    const state = this._stateRepo.load(user.id);
+    const target = state.habits.find(h => h.id === habitId);
+    if (target) {
+      target.scheduled_time = newTime;
+      this._stateRepo.save(user.id, state);
+      return target;
+    }
+    return null;
+  }
+
+  /**
    * Delete a habit by ID.
    * @param {string} habitId
    * @returns {Promise<boolean>}

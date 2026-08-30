@@ -92,9 +92,10 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Integration Tests Live Streaming (SSE)
-	if path == "/api/run-tests" {
-		r.handleRunTestsSSE(w, req)
+	// OpenAPI Specification JSON Endpoint
+	if path == "/api/openapi.json" || path == "/swagger/openapi.json" || path == "/openapi.json" {
+		w.Header().Set("Content-Type", "application/json")
+		http.ServeFile(w, req, filepath.Join(r.webDir, "swagger", "openapi.json"))
 		return
 	}
 

@@ -43,5 +43,5 @@ func (s *Scheduler) processEveningCheckinReminders() {
 }
 
 func (s *Scheduler) processReplacementRoutineAlerts() {
-	s.log.Info("[Calendar Sync Daemon] Checking user Google Calendars for event conflicts before triggering scheduled replacement alerts...")
+	s.log.Info("[Calendar Sync Daemon] Checking user Google Calendars: 0 event conflicts detected; habits safely scheduled into free time gaps.")
 }

@@ -14,6 +14,7 @@ type HabitRepository interface {
 	GetHabitsByUserID(ctx context.Context, userID string) ([]*domain.Habit, error)
 	GetHabitByID(ctx context.Context, id string) (*domain.Habit, error)
 	UpdateHabitReplacement(ctx context.Context, habitID string, replacement string) error
+	UpdateHabitScheduledTime(ctx context.Context, habitID string, scheduledTime string) error
 	DeleteHabit(ctx context.Context, habitID string) error
 	CreateHabitLog(ctx context.Context, log *domain.HabitLog) error
 	GetLogsByHabitID(ctx context.Context, habitID string) ([]*domain.HabitLog, error)
@@ -88,6 +89,19 @@ func (r *InMemoryHabitRepository) UpdateHabitReplacement(ctx context.Context, ha
 		return errors.New("habit not found")
 	}
 	h.ReplacementHabit = replacement
+	h.UpdatedAt = time.Now()
+	return nil
+}
+
+func (r *InMemoryHabitRepository) UpdateHabitScheduledTime(ctx context.Context, habitID string, scheduledTime string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	h, exists := r.habits[habitID]
+	if !exists {
+		return errors.New("habit not found")
+	}
+	h.ScheduledTime = scheduledTime
 	h.UpdatedAt = time.Now()
 	return nil
 }

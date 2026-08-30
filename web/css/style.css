@@ -4,83 +4,134 @@
  * Modern, crisp design with responsive viewport alignment.
  */
 
-:root, [data-theme="dark"] {
-  /* Flat Softer Dark Palette (Zero Gradients, Lighter Slate) */
-  --bg-primary: #1e293b;
-  --bg-secondary: #273549;
-  --bg-surface: #2a3b50;
-  --bg-surface-elevated: #334862;
+:root {
+  --toastify-color-light: #fff;
+  --toastify-color-dark: #121212;
+  --toastify-color-info: #3498db;
+  --toastify-color-success: #07bc0c;
+  --toastify-color-warning: #f1c40f;
+  --toastify-color-error: #e74c3c;
+  --toastify-color-transparent: hsla(0,0%,100%,.7);
+  --toastify-icon-color-info: var(--toastify-color-info);
+  --toastify-icon-color-success: var(--toastify-color-success);
+  --toastify-icon-color-warning: var(--toastify-color-warning);
+  --toastify-icon-color-error: var(--toastify-color-error);
+  --toastify-toast-width: 320px;
+  --toastify-toast-offset: 16px;
+  --toastify-toast-top: max(var(--toastify-toast-offset),env(safe-area-inset-top));
+  --toastify-toast-right: max(var(--toastify-toast-offset),env(safe-area-inset-right));
+  --toastify-toast-left: max(var(--toastify-toast-offset),env(safe-area-inset-left));
+  --toastify-toast-bottom: max(var(--toastify-toast-offset),env(safe-area-inset-bottom));
+  --toastify-toast-background: #fff;
+  --toastify-toast-min-height: 64px;
+  --toastify-toast-max-height: 800px;
+  --toastify-toast-bd-radius: 6px;
+  --toastify-font-family: sans-serif;
+  --toastify-z-index: 9999;
+  --toastify-text-color-light: #757575;
+  --toastify-text-color-dark: #fff;
+  --toastify-text-color-info: #fff;
+  --toastify-text-color-success: #fff;
+  --toastify-text-color-warning: #fff;
+  --toastify-text-color-error: #fff;
+  --toastify-spinner-color: #616161;
+  --toastify-spinner-color-empty-area: #e0e0e0;
+  --toastify-color-progress-light: linear-gradient(90deg,#4cd964,#5ac8fa,#007aff,#34aadc,#5856d6,#ff2d55);
+  --toastify-color-progress-dark: #bb86fc;
+  --toastify-color-progress-info: var(--toastify-color-info);
+  --toastify-color-progress-success: var(--toastify-color-success);
+  --toastify-color-progress-warning: var(--toastify-color-warning);
+  --toastify-color-progress-error: var(--toastify-color-error);
+  --toastify-color-progress-bgo: .2;
 
-  --border-subtle: #3f5572;
-  --border-strong: #546e91;
+  /* Page Base — derived from toastify dark (#121212) */
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --bg-surface: #252525;
+  --bg-surface-elevated: #2e2e2e;
+
+  --border-subtle: #383838;
+  --border-strong: #4a4a4a;
 
   --text-primary: #ffffff;
-  --text-secondary: #d6e2ee;
-  --text-muted: #9cb2cb;
+  --text-secondary: #b0b0b0;
+  --text-muted: #757575;
 
-  --blue-primary: #38bdf8;
-  --blue-hover: #0ea5e9;
-  --blue-subtle: rgba(56, 189, 248, 0.2);
+  /* Accent Colors — mapped directly from toastify palette */
+  --blue-primary: #3498db;
+  --blue-hover: #2980b9;
+  --blue-subtle: rgba(52, 152, 219, 0.16);
 
-  --emerald-primary: #34d399;
-  --emerald-hover: #10b981;
-  --emerald-subtle: rgba(52, 211, 153, 0.2);
+  --emerald-primary: #07bc0c;
+  --emerald-hover: #059b09;
+  --emerald-subtle: rgba(7, 188, 12, 0.16);
 
-  --indigo-primary: #a5b4fc;
-  --indigo-hover: #818cf8;
-  --indigo-subtle: rgba(165, 180, 252, 0.2);
+  --indigo-primary: #8e44ad;
+  --indigo-hover: #732d91;
+  --indigo-subtle: rgba(142, 68, 173, 0.16);
 
-  --amber-primary: #fbbf24;
-  --amber-hover: #f59e0b;
-  --amber-subtle: rgba(251, 191, 36, 0.2);
+  --amber-primary: #f1c40f;
+  --amber-hover: #d4ac0d;
+  --amber-subtle: rgba(241, 196, 15, 0.16);
 
-  --rose-primary: #fb7185;
-  --rose-hover: #f43f5e;
-  --rose-subtle: rgba(251, 113, 133, 0.2);
+  --rose-primary: #e74c3c;
+  --rose-hover: #c0392b;
+  --rose-subtle: rgba(231, 76, 60, 0.16);
+
+  --red-primary: #e74c3c;
 
   --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
   --radius-full: 9999px;
 
   --transition-fast: 0.15s ease;
   --transition-normal: 0.25s ease;
+
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme="light"] {
-  /* Flat Light Palette */
-  --bg-primary: #f8fafc;
+  /* Page Base — derived from toastify light (#fff) */
+  --bg-primary: #f5f5f5;
   --bg-secondary: #ffffff;
-  --bg-surface: #f1f5f9;
-  --bg-surface-elevated: #e2e8f0;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #eeeeee;
 
-  --border-subtle: #cbd5e1;
-  --border-strong: #94a3b8;
+  --border-subtle: #e0e0e0;
+  --border-strong: #bdbdbd;
 
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
+  --text-primary: #212121;
+  --text-secondary: #616161;
+  --text-muted: #757575;
 
-  --blue-primary: #0284c7;
-  --blue-hover: #0369a1;
-  --blue-subtle: #e0f2fe;
+  /* Accent Colors — same toastify palette, slightly darker for light bg contrast */
+  --blue-primary: #2980b9;
+  --blue-hover: #1f618d;
+  --blue-subtle: rgba(52, 152, 219, 0.12);
 
-  --emerald-primary: #059669;
-  --emerald-hover: #047857;
-  --emerald-subtle: #d1fae5;
+  --emerald-primary: #07bc0c;
+  --emerald-hover: #059b09;
+  --emerald-subtle: rgba(7, 188, 12, 0.12);
 
-  --indigo-primary: #4f46e5;
-  --indigo-hover: #4338ca;
-  --indigo-subtle: #e0e7ff;
+  --indigo-primary: #8e44ad;
+  --indigo-hover: #732d91;
+  --indigo-subtle: rgba(142, 68, 173, 0.12);
 
-  --amber-primary: #d97706;
-  --amber-hover: #b45309;
-  --amber-subtle: #fef3c7;
+  --amber-primary: #d4ac0d;
+  --amber-hover: #b7950b;
+  --amber-subtle: rgba(241, 196, 15, 0.15);
 
-  --rose-primary: #e11d48;
-  --rose-hover: #be123c;
-  --rose-subtle: #ffe4e6;
+  --rose-primary: #e74c3c;
+  --rose-hover: #c0392b;
+  --rose-subtle: rgba(231, 76, 60, 0.12);
+
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 /* Global Reset */
@@ -715,6 +766,7 @@ input:-webkit-autofill:active {
   justify-content: center;
   padding: 1.25rem;
   z-index: 2000;
+  overflow-y: auto;
 }
 
 .modal-overlay.open, .modal-overlay.active {
@@ -728,6 +780,9 @@ input:-webkit-autofill:active {
   padding: 1.75rem;
   width: 100%;
   max-width: 520px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .modal-header {

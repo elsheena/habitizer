@@ -121,3 +121,35 @@ func (h *HabitHandler) PromoteReplacement(w http.ResponseWriter, r *http.Request
 
 	response.JSON(w, http.StatusOK, res, "Replacement habit promoted successfully")
 }
+
+func (h *HabitHandler) AutoSchedule(w http.ResponseWriter, r *http.Request) {
+	var dto domain.AutoScheduleDTO
+	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request payload", err.Error())
+		return
+	}
+
+	res, err := h.usecase.AutoScheduleHabits(r.Context(), dto)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+
+	response.JSON(w, http.StatusOK, res, "Habits scheduled into free calendar slots")
+}
+
+func (h *HabitHandler) UpdateHabitTime(w http.ResponseWriter, r *http.Request) {
+	var dto domain.UpdateHabitTimeDTO
+	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request payload", err.Error())
+		return
+	}
+
+	res, err := h.usecase.UpdateHabitScheduledTime(r.Context(), dto)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+
+	response.JSON(w, http.StatusOK, res, "Habit scheduled time updated successfully")
+}

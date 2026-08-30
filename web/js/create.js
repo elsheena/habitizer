@@ -21,6 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const catHidden = document.getElementById('category-hidden');
   const freqHidden = document.getElementById('frequency-hidden');
 
+  // Read URL query parameters for prefilled time slot
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramTime = urlParams.get('time');
+  if (paramTime && scheduledTimeInput) {
+    scheduledTimeInput.value = paramTime;
+  }
+
   // Preview elements
   const prevCue = document.getElementById('prev-cue');
   const prevBad = document.getElementById('prev-bad');

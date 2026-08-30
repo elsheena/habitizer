@@ -1,0 +1,770 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Habitizer Microservices API Ecosystem",
+    "description": "Comprehensive REST API specification for Habitizer: Behavioral Psychology & Habit Substitution Platform.\n\n### Microservices Architecture:\n- **Gateway Service** (Port 8000): Unified reverse proxy, clean static hosting, and live SSE test streaming.\n- **Auth Service** (Port 8001): User registration, JWT authentication, and profile token verification.\n- **Habit Service** (Port 8002): Habit substitution loop CRUD, nightly check-in evaluation, suggestions catalog, auto-promotion, and Google Calendar auto-scheduling.\n- **Analytics Service** (Port 8003): Streak calculation, freeze ledger, coin economy, and reward redemptions.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Habitizer Engineering Team",
+      "email": "support@habitizer.io"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "API Gateway (Local Development)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication & Users",
+      "description": "User identity, registration, JWT authorization, and profile claims (Auth Service)"
+    },
+    {
+      "name": "Habits & Substitution Loops",
+      "description": "Habit loop management (Cue -> Bad Habit -> Healthy Routine -> Reward) (Habit Service)"
+    },
+    {
+      "name": "Nightly Check-In & Auto-Promotion",
+      "description": "Daily 21:00 audit, substitution verification, and routine auto-promotion (Habit Service)"
+    },
+    {
+      "name": "Calendar & Smart Auto-Scheduling",
+      "description": "Google Calendar sync, open time gap detection, and conflict-free habit placement (Habit Service)"
+    },
+    {
+      "name": "Streaks, Economy & Rewards",
+      "description": "Clean streaks, streak freezes, coin balance, and shop rewards (Analytics Service)"
+    },
+    {
+      "name": "System & Integration Tests",
+      "description": "Gateway health check and live SSE integration test stream"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["System & Integration Tests"],
+        "summary": "Gateway Health Check",
+        "description": "Returns operational status and version of the API Gateway.",
+        "responses": {
+          "200": {
+            "description": "Gateway is UP and healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/run-tests": {
+      "get": {
+        "tags": ["System & Integration Tests"],
+        "summary": "Live SSE Integration Test Stream",
+        "description": "Triggers the full Go integration test runner and streams live log output via Server-Sent Events (SSE).",
+        "responses": {
+          "200": {
+            "description": "SSE Event Stream",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": ["Authentication & Users"],
+        "summary": "Register a new user",
+        "description": "Creates a new user profile with free tier limits (max 3 habits) and initial coin balance.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Email already registered or invalid payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": ["Authentication & Users"],
+        "summary": "Authenticate user & issue JWT",
+        "description": "Verifies user credentials and returns a signed JWT token with user metadata.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid email or password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/habits": {
+      "get": {
+        "tags": ["Habits & Substitution Loops"],
+        "summary": "List all habits for user",
+        "description": "Retrieves the active habit substitution loops for the authenticated user.",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Optional User ID filter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of habit entities",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Habit"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Habits & Substitution Loops"],
+        "summary": "Create a new Habit Substitution Loop",
+        "description": "Creates a new habit loop containing Cue Trigger, Bad Habit, Healthy Routine, and Neuro Reward.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHabitRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Habit created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Habit"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Free tier limit reached (max 3 habits) or invalid payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/habits/{id}": {
+      "get": {
+        "tags": ["Habits & Substitution Loops"],
+        "summary": "Get habit by ID",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Habit details",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Habit" } }
+            }
+          },
+          "404": { "description": "Habit not found" }
+        }
+      },
+      "put": {
+        "tags": ["Habits & Substitution Loops"],
+        "summary": "Update habit details",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CreateHabitRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "Habit updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Habit" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["Habits & Substitution Loops"],
+        "summary": "Archive / Delete habit",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Habit deleted" }
+        }
+      }
+    },
+    "/api/v1/habits/checkin": {
+      "post": {
+        "tags": ["Nightly Check-In & Auto-Promotion"],
+        "summary": "Submit daily 21:00 check-in",
+        "description": "Records daily check-in responses, awards habit coins/streaks, and detects repeated custom routines for auto-promotion.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckinRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Check-in recorded and evaluated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckinResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/habits/suggestions": {
+      "get": {
+        "tags": ["Habits & Substitution Loops"],
+        "summary": "List healthy replacement suggestions catalog",
+        "description": "Retrieves curated evidence-based healthy substitution routines filtered by category (Mindfulness, Hydration, Physical Action, Focus, Relaxation).",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Optional category filter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Catalog of suggested routines",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SuggestionItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/habits/promote-replacement": {
+      "post": {
+        "tags": ["Nightly Check-In & Auto-Promotion"],
+        "summary": "Auto-promote custom replacement into official habit",
+        "description": "Converts a frequently used ad-hoc substitution routine into a permanent scheduled Habit Substitution entity.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["user_id", "routine_name"],
+                "properties": {
+                  "user_id": { "type": "string", "example": "usr_123" },
+                  "routine_name": { "type": "string", "example": "Chamomile Tea & Deep Breathing" },
+                  "bad_habit": { "type": "string", "example": "Late Night Snacking" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Routine successfully promoted to habit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Habit"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/habits/auto-schedule": {
+      "post": {
+        "tags": ["Calendar & Smart Auto-Scheduling"],
+        "summary": "Smart Auto-Schedule Habits into Free Time Slots",
+        "description": "Analyzes external calendar busy blocks, calculates open time gaps, and aligns habit substitution routines into optimal conflict-free slots.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoScheduleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated habits schedule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoScheduleResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/habits/update-time": {
+      "post": {
+        "tags": ["Calendar & Smart Auto-Scheduling"],
+        "summary": "Update habit scheduled time (Drag-and-Drop)",
+        "description": "Updates the scheduled execution time for a specific habit when dragged and dropped onto the calendar timetable.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["habit_id", "scheduled_time"],
+                "properties": {
+                  "habit_id": { "type": "string", "example": "hab_123" },
+                  "scheduled_time": { "type": "string", "example": "14:00" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Habit time updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Habit"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/streaks": {
+      "get": {
+        "tags": ["Streaks, Economy & Rewards"],
+        "summary": "Get user streak ledger & metrics",
+        "description": "Retrieves current streak, longest clean streak, total substitutions, relapses, and success percentage.",
+        "parameters": [
+          { "name": "user_id", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Streak statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StreakMetrics"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/economy": {
+      "get": {
+        "tags": ["Streaks, Economy & Rewards"],
+        "summary": "Get user coin balance & streak freezes",
+        "description": "Retrieves current habit coin balance, active streak freezes count, and transaction ledger.",
+        "parameters": [
+          { "name": "user_id", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Economy ledger",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EconomyLedger"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/economy/buy-freeze": {
+      "post": {
+        "tags": ["Streaks, Economy & Rewards"],
+        "summary": "Purchase a Streak Freeze with Habit Coins",
+        "description": "Deducts 50 habit coins and increments the user's available streak freeze reserves by 1.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["user_id"],
+                "properties": {
+                  "user_id": { "type": "string", "example": "usr_123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Purchase successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EconomyLedger"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Insufficient coin balance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/economy/redeem-reward": {
+      "post": {
+        "tags": ["Streaks, Economy & Rewards"],
+        "summary": "Redeem a screen-time or custom reward",
+        "description": "Deducts habit coins and issues an unlocked reward token (e.g. 30-Min Clean Screen Time Pass).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["user_id", "reward_id"],
+                "properties": {
+                  "user_id": { "type": "string", "example": "usr_123" },
+                  "reward_id": { "type": "string", "example": "rew_screentime_30m" },
+                  "cost": { "type": "integer", "example": 80 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reward unlocked successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Reward redeemed successfully" },
+                    "remaining_coins": { "type": "integer", "example": 100 },
+                    "auth_token": { "type": "string", "example": "PASS-8849-SCR" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/profile": {
+      "get": {
+        "tags": ["Streaks, Economy & Rewards"],
+        "summary": "Get comprehensive user profile & ledger",
+        "description": "Returns full user profile including tier (free vs premium), active habits count, streak statistics, and coin balances.",
+        "responses": {
+          "200": {
+            "description": "Profile summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "API Gateway Healthy" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "service": { "type": "string", "example": "gateway-service" },
+              "status": { "type": "string", "example": "UP" },
+              "version": { "type": "string", "example": "1.0.0" }
+            }
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["full_name", "email", "password"],
+        "properties": {
+          "full_name": { "type": "string", "example": "Alex Doe" },
+          "email": { "type": "string", "format": "email", "example": "alex.doe@habitizer.io" },
+          "password": { "type": "string", "format": "password", "example": "HabitSecure#2026" }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email", "example": "alex.doe@habitizer.io" },
+          "password": { "type": "string", "format": "password", "example": "HabitSecure#2026" }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string", "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "example": "usr_a8f93e10-6c7b-4d2a-8921-123456789abc" },
+              "full_name": { "type": "string", "example": "Alex Doe" },
+              "email": { "type": "string", "example": "alex.doe@habitizer.io" },
+              "tier": { "type": "string", "enum": ["free", "premium"], "example": "free" },
+              "coins": { "type": "integer", "example": 150 },
+              "streak_freezes": { "type": "integer", "example": 2 }
+            }
+          }
+        }
+      },
+      "Habit": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "hab_47c2e891-b11d-4074-bcf2-998877665544" },
+          "user_id": { "type": "string", "example": "usr_123" },
+          "bad_habit": { "type": "string", "example": "Late Night Junk Food Snacking" },
+          "cue_trigger": { "type": "string", "example": "Stress or boredom around 11:00 PM" },
+          "replacement_habit": { "type": "string", "example": "5-Minute Deep Breathing & Herbal Tea" },
+          "neuro_reward": { "type": "string", "example": "15 Mins Clean Screen Time Pass" },
+          "scheduled_time": { "type": "string", "example": "21:30" },
+          "frequency": { "type": "string", "example": "daily" },
+          "is_active": { "type": "boolean", "example": true },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CreateHabitRequest": {
+        "type": "object",
+        "required": ["bad_habit", "cue_trigger", "replacement_habit"],
+        "properties": {
+          "user_id": { "type": "string", "example": "usr_123" },
+          "bad_habit": { "type": "string", "example": "Mindless Social Scrolling" },
+          "cue_trigger": { "type": "string", "example": "Waking up in the morning" },
+          "replacement_habit": { "type": "string", "example": "10-Minute Morning Stretches & Water" },
+          "neuro_reward": { "type": "string", "example": "Speciality Espresso Coffee" },
+          "scheduled_time": { "type": "string", "example": "08:00" },
+          "frequency": { "type": "string", "example": "daily" }
+        }
+      },
+      "CheckinRequest": {
+        "type": "object",
+        "required": ["user_id", "date", "avoided_bad_habit"],
+        "properties": {
+          "user_id": { "type": "string", "example": "usr_123" },
+          "date": { "type": "string", "example": "2026-08-28" },
+          "avoided_bad_habit": { "type": "boolean", "example": true },
+          "used_custom_replacement": { "type": "boolean", "example": true },
+          "custom_replacement_name": { "type": "string", "example": "Chamomile Tea Routine" },
+          "notes": { "type": "string", "example": "Felt stress relief immediately" }
+        }
+      },
+      "CheckinResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "status": { "type": "string", "example": "substituted" },
+          "coins_earned": { "type": "integer", "example": 10 },
+          "current_streak": { "type": "integer", "example": 15 },
+          "auto_promotion_prompt": {
+            "type": "object",
+            "properties": {
+              "eligible": { "type": "boolean", "example": true },
+              "routine_name": { "type": "string", "example": "Chamomile Tea Routine" },
+              "consecutive_count": { "type": "integer", "example": 3 }
+            }
+          }
+        }
+      },
+      "SuggestionItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "sug_mindful_1" },
+          "category": { "type": "string", "example": "Mindfulness" },
+          "title": { "type": "string", "example": "Box Breathing & Cold Splash" },
+          "description": { "type": "string", "example": "4-4-4-4 rhythm for 3 minutes to halt adrenaline and reset vagal tone." },
+          "duration_minutes": { "type": "integer", "example": 5 },
+          "difficulty": { "type": "string", "example": "Easy" },
+          "psychological_mechanism": { "type": "string", "example": "Parasympathetic nervous system activation" }
+        }
+      },
+      "AutoScheduleRequest": {
+        "type": "object",
+        "required": ["user_id", "date"],
+        "properties": {
+          "user_id": { "type": "string", "example": "usr_123" },
+          "date": { "type": "string", "example": "2026-08-28" },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": { "type": "string", "example": "Team Standup" },
+                "startTime": { "type": "string", "example": "09:00" },
+                "endTime": { "type": "string", "example": "09:45" }
+              }
+            }
+          }
+        }
+      },
+      "AutoScheduleResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "scheduled_habits": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Habit" }
+          },
+          "free_slots_found": { "type": "integer", "example": 5 },
+          "conflicts_resolved": { "type": "integer", "example": 0 }
+        }
+      },
+      "StreakMetrics": {
+        "type": "object",
+        "properties": {
+          "current_streak": { "type": "integer", "example": 14 },
+          "longest_streak": { "type": "integer", "example": 21 },
+          "total_substituted": { "type": "integer", "example": 26 },
+          "total_relapsed": { "type": "integer", "example": 2 },
+          "success_rate": { "type": "number", "example": 92.8 }
+        }
+      },
+      "EconomyLedger": {
+        "type": "object",
+        "properties": {
+          "coins": { "type": "integer", "example": 150 },
+          "streak_freezes": { "type": "integer", "example": 2 },
+          "freeze_cost": { "type": "integer", "example": 50 }
+        }
+      },
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "usr_123" },
+          "full_name": { "type": "string", "example": "Alex Doe" },
+          "email": { "type": "string", "example": "alex.doe@habitizer.io" },
+          "tier": { "type": "string", "enum": ["free", "premium"], "example": "free" },
+          "active_habits_count": { "type": "integer", "example": 2 },
+          "max_habits_allowed": { "type": "integer", "example": 3 },
+          "coins": { "type": "integer", "example": 150 },
+          "streak_freezes": { "type": "integer", "example": 2 }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "error": { "type": "string", "example": "Invalid request parameter" }
+        }
+      }
+    }
+  }
+}

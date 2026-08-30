@@ -35,6 +35,8 @@ func main() {
 	mux.HandleFunc("/api/v1/habits/suggestions", h.GetSuggestedReplacements)
 	mux.HandleFunc("/api/v1/habits/checkin", h.DailyCheckin)
 	mux.HandleFunc("/api/v1/habits/promote-replacement", h.PromoteReplacement)
+	mux.HandleFunc("/api/v1/habits/auto-schedule", h.AutoSchedule)
+	mux.HandleFunc("/api/v1/habits/update-time", h.UpdateHabitTime)
 
 	log.Info("Starting Habit Service on port %s", port)
 	if err := http.ListenAndServe(":"+port, mux); err != nil {
