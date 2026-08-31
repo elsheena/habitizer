@@ -1,7 +1,7 @@
 /**
  * SlotCreationModalComponent — 2-Step Time Slot Creation Modal.
  * Single Responsibility: Present choice between adding a Habit vs a Calendar Event on slot click,
- * and manage custom event creation form submission.
+ * and manage custom event creation form submission (including recurrence configuration).
  */
 class SlotCreationModalComponent extends UIComponent {
   /**
@@ -13,6 +13,7 @@ class SlotCreationModalComponent extends UIComponent {
     this.callbacks = callbacks;
     this.modalId = 'calendar-slot-create-modal';
     this.activeContext = null;
+    this._bound = false;
     this._initEvents();
   }
 
@@ -26,10 +27,10 @@ class SlotCreationModalComponent extends UIComponent {
     if (!modal) return;
 
     this.activeContext = {
-      dateKey: dateObj.dateKey,
-      dow: dateObj.dow,
-      dayNum: dateObj.dayNum,
-      timeStr: timeStr
+      dateKey: (dateObj && dateObj.dateKey) ? dateObj.dateKey : '2026-08-28',
+      dow: (dateObj && dateObj.dow) ? dateObj.dow : 'Fri',
+      dayNum: (dateObj && dateObj.dayNum) ? dateObj.dayNum : '28',
+      timeStr: timeStr || '09:00'
     };
 
     const stepChoice = document.getElementById('slot-modal-step-choice');
@@ -46,10 +47,10 @@ class SlotCreationModalComponent extends UIComponent {
     if (btnCancel) btnCancel.style.display = 'inline-flex';
 
     if (timeLabel) {
-      timeLabel.textContent = `Selected time slot: ${dateObj.dow}, Aug ${dateObj.dayNum} at ${timeStr}`;
+      timeLabel.textContent = `Selected time slot: ${this.activeContext.dow}, Aug ${this.activeContext.dayNum} at ${this.activeContext.timeStr}`;
     }
 
-    const startHour = parseInt(timeStr.split(':')[0], 10) || 9;
+    const startHour = parseInt(this.activeContext.timeStr.split(':')[0], 10) || 9;
     const endHour = Math.min(24, startHour + 1);
     const endTimeStr = endHour === 24 ? '23:59' : `${String(endHour).padStart(2, '0')}:00`;
 
@@ -59,13 +60,15 @@ class SlotCreationModalComponent extends UIComponent {
     const inputTitle = document.getElementById('slot-ev-title');
     const inputDesc = document.getElementById('slot-ev-desc');
     const inputLoc = document.getElementById('slot-ev-loc');
+    const inputRepeat = document.getElementById('slot-ev-repeat');
 
-    if (inputDate) inputDate.value = dateObj.dateKey;
-    if (inputStart) inputStart.value = timeStr;
+    if (inputDate) inputDate.value = this.activeContext.dateKey;
+    if (inputStart) inputStart.value = this.activeContext.timeStr;
     if (inputEnd) inputEnd.value = endTimeStr;
     if (inputTitle) inputTitle.value = '';
     if (inputDesc) inputDesc.value = '';
     if (inputLoc) inputLoc.value = '';
+    if (inputRepeat) inputRepeat.value = 'none';
 
     modal.classList.add('open');
     if (window.Icons) window.Icons.renderAll();
@@ -81,8 +84,14 @@ class SlotCreationModalComponent extends UIComponent {
   }
 
   _initEvents() {
+    if (this._bound) return;
+
     const bind = () => {
+      if (this._bound) return;
       const modal = document.getElementById(this.modalId);
+      if (!modal) return;
+      this._bound = true;
+
       const closeX = document.getElementById('slot-modal-close-x');
       const btnCancel = document.getElementById('slot-modal-btn-cancel');
       const btnBack = document.getElementById('slot-modal-btn-back');
@@ -91,6 +100,10 @@ class SlotCreationModalComponent extends UIComponent {
       const btnSubmit = document.getElementById('slot-modal-btn-submit');
       const stepChoice = document.getElementById('slot-modal-step-choice');
       const stepForm = document.getElementById('slot-modal-step-form');
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) this.close();
+      });
 
       if (closeX) closeX.addEventListener('click', () => this.close());
       if (btnCancel) btnCancel.addEventListener('click', () => this.close());
@@ -126,11 +139,12 @@ class SlotCreationModalComponent extends UIComponent {
           e.preventDefault();
           const title = (document.getElementById('slot-ev-title')?.value || '').trim();
           const desc = (document.getElementById('slot-ev-desc')?.value || '').trim();
-          const date = document.getElementById('slot-ev-date')?.value || '2026-08-28';
+          const date = document.getElementById('slot-ev-date')?.value || (this.activeContext ? this.activeContext.dateKey : '2026-08-28');
           const start = document.getElementById('slot-ev-start')?.value || '09:00';
           const end = document.getElementById('slot-ev-end')?.value || '10:00';
           const loc = (document.getElementById('slot-ev-loc')?.value || '').trim();
           const tag = document.getElementById('slot-ev-tag')?.value || 'General';
+          const repeat = document.getElementById('slot-ev-repeat')?.value || 'none';
 
           if (!title) {
             if (window.Toast) window.Toast.show('Please enter an event title (* required)', 'error');
@@ -140,6 +154,7 @@ class SlotCreationModalComponent extends UIComponent {
 
           try {
             if (window.API && window.API.addCalendarEvent) {
+              const isRecurring = repeat !== 'none';
               const newEvent = await window.API.addCalendarEvent({
                 title: title,
                 description: desc,
@@ -148,12 +163,14 @@ class SlotCreationModalComponent extends UIComponent {
                 endTime: end,
                 location: loc,
                 tag: tag,
+                repeat: repeat,
+                isRecurring: isRecurring,
                 isGoogleEvent: false
               });
 
               this.close();
               if (this.callbacks.onEventCreated) {
-                this.callbacks.onEventCreated(newEvent);
+                await this.callbacks.onEventCreated(newEvent);
               }
               if (window.Toast) {
                 window.Toast.show(`Calendar event "${title}" added successfully!`, 'success');

@@ -15,6 +15,7 @@
  *   EconomyService(auth, stateRepo)
  *   StreakService(auth, stateRepo)
  *   CatalogService()
+ *   CalendarService(auth, stateRepo, backendSync)
  */
 
 (function () {
@@ -33,7 +34,6 @@
   const calendarService = new CalendarService(authService, stateRepo, backendSync);
 
   // --- Public Facade ---
-  // Preserves the exact same method signatures that page controllers call.
   const API = {
     // Auth
     isAuthenticated:  ()                       => authService.isAuthenticated(),
@@ -44,12 +44,14 @@
     getCurrentUser:   ()                       => authService.getCurrentUser(),
     toggleTier:       ()                       => authService.toggleTier(),
 
-    // Habits
-    getHabits:        ()                       => habitService.getAll(),
-    createHabit:      (data)                   => habitService.create(data),
-    updateHabit:      (id, updates)            => habitService.update(id, updates),
-    deleteHabit:      (id)                     => habitService.delete(id),
-    updateHabitTime:  (id, newTime)            => habitService.updateScheduledTime(id, newTime),
+    // Habits & Recurring Schedules
+    getHabits:                ()                               => habitService.getAll(),
+    createHabit:              (data)                           => habitService.create(data),
+    updateHabit:              (id, updates)                    => habitService.update(id, updates),
+    deleteHabit:              (id)                             => habitService.delete(id),
+    updateHabitTime:          (id, newTime)                    => habitService.updateScheduledTime(id, newTime),
+    getEffectiveHabitTime:    (habit, dateKey)                 => habitService.getEffectiveTimeForDate(habit, dateKey),
+    updateHabitScheduleScope: (id, scope, dateKey, newTime)    => habitService.updateScheduleScope(id, scope, dateKey, newTime),
 
     // Economy
     getEconomy:       ()                       => economyService.getBalance(),
@@ -71,6 +73,7 @@
     addCalendarEvent:               (data)             => calendarService.addEvent(data),
     updateCalendarEvent:            (id, updates)      => calendarService.updateEvent(id, updates),
     deleteCalendarEvent:            (id)               => calendarService.deleteEvent(id),
+    updateEventScheduleScope:       (id, scope, dateKey, sTime, eTime, title) => calendarService.updateEventScheduleScope(id, scope, dateKey, sTime, eTime, title),
     connectCalendarIcal:            (url)              => calendarService.connectWithIcalUrl(url),
     connectCalendarGoogle:          (email)            => calendarService.connectWithGoogleAccount(email),
     disconnectCalendar:             ()                 => calendarService.disconnect(),

@@ -3,6 +3,7 @@ go 1.27.0
 use (
 	./gateway
 	./pkg
+	./scripts
 	./services/analytics-service
 	./services/auth-service
 	./services/habit-service

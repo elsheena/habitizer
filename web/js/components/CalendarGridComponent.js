@@ -377,7 +377,35 @@ class CalendarGridComponent extends UIComponent {
             const offsetY = e.clientY - rect.top;
             const pct = Math.max(0, Math.min(0.99, offsetY / rect.height));
             const minuteOffset = Math.min(45, Math.floor((pct * 60) / 15) * 15);
-            this.rescheduleScopeModal.open(this._draggedItem, dateObj.dateKey, h, minuteOffset);
+
+            const dragged = this._draggedItem;
+            if (!dragged) return;
+
+            // Check if item is recurring:
+            // 1. Habit loops repeat by default (daily/weekly substitution routines).
+            // 2. Events repeat ONLY if explicitly configured with repeat: 'daily' | 'weekly' | 'weekdays'.
+            // Google calendar events and one-time custom events (repeat: 'none') are one-time and NEVER show modal.
+            let isRecurring = false;
+            if (dragged.type === 'habit') {
+              isRecurring = true;
+            } else if (dragged.type === 'event') {
+              const r = (dragged.data?.repeat || '').toLowerCase();
+              if (r === 'daily' || r === 'weekly' || r === 'weekdays') {
+                isRecurring = true;
+              }
+            }
+
+            if (isRecurring) {
+              this.rescheduleScopeModal.open(dragged, dateObj.dateKey, h, minuteOffset);
+            } else {
+              // Direct reschedule for one-time non-repeating events without modal popup
+              this._applyRescheduleScope('single', {
+                item: dragged,
+                targetDateKey: dateObj.dateKey,
+                targetHour: h,
+                targetMinute: minuteOffset
+              });
+            }
           }
         }
       });
@@ -410,17 +438,57 @@ class CalendarGridComponent extends UIComponent {
       dayCol.appendChild(activeLine);
     }
 
-    // Prepare items for this day
-    const dayEvents = (this.events || []).filter(e => !e.date || e.date === dateObj.dateKey);
+    // Prepare items for this day:
+    // Non-repeating events ONLY show on the exact date they were added (never before or after!).
+    // Repeating events ONLY show starting from the date they were added (dateObj.dateKey >= e.date), never before!
+    const dayEvents = (this.events || []).filter(e => {
+      const eventStart = e.date || '2026-08-28';
+      const r = (e.repeat || 'none').toLowerCase();
+
+      if (r === 'daily') {
+        return dateObj.dateKey >= eventStart;
+      } else if (r === 'weekdays') {
+        const dayOfWeek = dateObj.date.getDay();
+        const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+        return dateObj.dateKey >= eventStart && isWeekday;
+      } else if (r === 'weekly') {
+        const startDate = new Date(eventStart + 'T00:00:00');
+        const isSameDow = dateObj.date.getDay() === startDate.getDay();
+        return dateObj.dateKey >= eventStart && isSameDow;
+      } else {
+        return dateObj.dateKey === eventStart;
+      }
+    });
     const dayStartMin = this.hourStart * 60;
     const dayEndMin = this.hourEnd * 60;
 
     const rawItems = [];
 
-    // 1. Ingest Events
+    // 1. Ingest Events with Date-Specific Schedule Scoping
     dayEvents.forEach(ev => {
-      const evS = CalendarService.timeToMinutes(ev.startTime || '09:00');
-      const evE = CalendarService.timeToMinutes(ev.endTime || '10:00');
+      let sTime = ev.startTime || '09:00';
+      let eTime = ev.endTime || '10:00';
+
+      if (ev.date_overrides && ev.date_overrides[dateObj.dateKey]) {
+        sTime = ev.date_overrides[dateObj.dateKey].startTime || sTime;
+        eTime = ev.date_overrides[dateObj.dateKey].endTime || eTime;
+      } else if (ev.future_overrides && Array.isArray(ev.future_overrides) && ev.future_overrides.length > 0) {
+        const sorted = [...ev.future_overrides].sort((a, b) => b.fromDate.localeCompare(a.fromDate));
+        const applicable = sorted.find(ov => ov.fromDate <= dateObj.dateKey);
+        if (applicable) {
+          sTime = applicable.startTime;
+          eTime = applicable.endTime;
+        } else {
+          const earliest = sorted[sorted.length - 1];
+          if (earliest && earliest.prevStartTime && dateObj.dateKey < earliest.fromDate) {
+            sTime = earliest.prevStartTime;
+            eTime = earliest.prevEndTime;
+          }
+        }
+      }
+
+      const evS = CalendarService.timeToMinutes(sTime);
+      const evE = CalendarService.timeToMinutes(eTime);
       if (evE > dayStartMin && evS < dayEndMin) {
         rawItems.push({
           type: 'event',
@@ -428,18 +496,21 @@ class CalendarGridComponent extends UIComponent {
           data: ev,
           title: ev.title,
           sub: ev.location || (ev.isGoogleEvent ? 'Google Calendar' : 'Custom Event'),
+          dateKey: dateObj.dateKey,
           startMin: Math.max(evS, dayStartMin),
           endMin: Math.min(evE, dayEndMin),
-          startTime: ev.startTime,
-          endTime: ev.endTime,
+          startTime: sTime,
+          endTime: eTime,
           isGoogle: Boolean(ev.isGoogleEvent)
         });
       }
     });
 
-    // 2. Ingest Habits
+    // 2. Ingest Habits with Date-Specific Schedule Scoping
     (this.habits || []).forEach(h => {
-      const hTime = h.scheduled_time || '09:00';
+      const hTime = (window.API && window.API.getEffectiveHabitTime)
+        ? window.API.getEffectiveHabitTime(h, dateObj.dateKey)
+        : (h.date_overrides?.[dateObj.dateKey] || h.scheduled_time || '09:00');
       const hStart = CalendarService.timeToMinutes(hTime);
       const hDuration = 30;
       const hEnd = hStart + hDuration;
@@ -457,6 +528,7 @@ class CalendarGridComponent extends UIComponent {
           data: h,
           title: h.replacement_habit || 'Healthy Routine',
           sub: `Avoids: ${h.bad_habit || 'Trigger'}`,
+          dateKey: dateObj.dateKey,
           startMin: Math.max(hStart, dayStartMin),
           endMin: Math.min(hEnd, dayEndMin),
           startTime: hTime,
@@ -549,63 +621,36 @@ class CalendarGridComponent extends UIComponent {
     if (!ctx) return;
     const { item, targetDateKey, targetHour, targetMinute } = ctx;
     const newStartTime = `${String(targetHour).padStart(2, '0')}:${String(targetMinute).padStart(2, '0')}`;
-    const origDurationMin = Math.max(15, item.endMin - item.startMin);
+    const origDurationMin = Math.max(15, (item.endMin || 0) - (item.startMin || 0));
     const newStartTotalMin = (targetHour * 60) + targetMinute;
     const newEndMin = newStartTotalMin + origDurationMin;
     const newEndTime = CalendarService.minutesToTime(newEndMin);
 
     try {
       if (item.type === 'habit') {
-        if (scope === 'all' || scope === 'future') {
-          if (window.API && window.API.updateHabitTime) {
-            await window.API.updateHabitTime(item.id, newStartTime);
-          }
-        } else {
-          if (window.API && window.API.addCalendarEvent) {
-            await window.API.addCalendarEvent({
-              title: item.title,
-              description: `Routine scheduled for this date`,
-              date: targetDateKey,
-              startTime: newStartTime,
-              endTime: newEndTime,
-              tag: 'Health'
-            });
-          }
+        if (window.API && window.API.updateHabitScheduleScope) {
+          await window.API.updateHabitScheduleScope(item.id, scope, targetDateKey, newStartTime);
+        } else if (scope === 'all') {
+          await window.API.updateHabitTime(item.id, newStartTime);
         }
       } else if (item.type === 'event') {
-        if (scope === 'all') {
-          const allEvents = await window.API.getCalendarEvents();
-          for (const ev of allEvents) {
-            if (ev.title === item.title && window.API.updateCalendarEvent) {
-              await window.API.updateCalendarEvent(ev.id, {
-                startTime: newStartTime,
-                endTime: newEndTime
-              });
-            }
-          }
-        } else if (scope === 'future') {
-          const allEvents = await window.API.getCalendarEvents();
-          for (const ev of allEvents) {
-            if (ev.title === item.title && ev.date >= targetDateKey && window.API.updateCalendarEvent) {
-              await window.API.updateCalendarEvent(ev.id, {
-                startTime: newStartTime,
-                endTime: newEndTime
-              });
-            }
-          }
+        if (window.API && window.API.updateEventScheduleScope) {
+          await window.API.updateEventScheduleScope(item.id, scope, targetDateKey, newStartTime, newEndTime, item.title);
         } else {
-          if (window.API && window.API.updateCalendarEvent) {
-            await window.API.updateCalendarEvent(item.id, {
-              date: targetDateKey,
-              startTime: newStartTime,
-              endTime: newEndTime
-            });
-          }
+          await window.API.updateCalendarEvent(item.id, {
+            date: targetDateKey,
+            startTime: newStartTime,
+            endTime: newEndTime
+          });
         }
       }
 
       await this._onDataChanged();
-      const scopeLabel = scope === 'all' ? 'all occurrences in series' : scope === 'future' ? 'this and all future occurrences' : 'this event only';
+      const scopeLabel = scope === 'all' 
+        ? 'all occurrences in series' 
+        : scope === 'future' 
+          ? 'this and all future occurrences' 
+          : 'this event only';
       if (window.Toast) {
         window.Toast.show(`Rescheduled "${item.title}" to ${newStartTime} (${scopeLabel})!`, 'success');
       }
@@ -613,6 +658,22 @@ class CalendarGridComponent extends UIComponent {
       console.error('Failed to apply reschedule scope:', err);
       if (window.Toast) window.Toast.show('Could not update time slot.', 'error');
     }
+  }
+
+  jumpToDay(year, month, day) {
+    this.currentDate = new Date(year, month, day);
+    this.currentView = 'day';
+
+    const viewBtns = document.querySelectorAll('.view-btn');
+    viewBtns.forEach(b => {
+      if (b.getAttribute('data-view') === 'day') {
+        b.classList.add('active');
+      } else {
+        b.classList.remove('active');
+      }
+    });
+
+    this.render();
   }
 
   openDayModal(day, month, year, dateKey) {
@@ -640,9 +701,17 @@ class CalendarGridComponent extends UIComponent {
     // Previous month trailing cells
     for (let i = firstDay - 1; i >= 0; i--) {
       const d = daysInPrevMonth - i;
+      const targetDate = new Date(year, month - 1, d);
       const numSpan = this.createElement('span', { className: 'cell-day-num', text: String(d) });
       const headerDiv = this.createElement('div', { className: 'cell-header', children: [numSpan] });
-      grid.appendChild(this.createElement('div', { className: ['calendar-cell', 'other-month'], children: [headerDiv] }));
+      grid.appendChild(this.createElement('div', {
+        className: ['calendar-cell', 'other-month'],
+        children: [headerDiv],
+        attrs: { title: `Switch to Day view for ${d}`, style: 'cursor: pointer;' },
+        events: {
+          click: () => this.jumpToDay(targetDate.getFullYear(), targetDate.getMonth(), d)
+        }
+      }));
     }
 
     // Current month active cells
@@ -663,8 +732,9 @@ class CalendarGridComponent extends UIComponent {
       const cell = this.createElement('div', {
         className: ['calendar-cell', isToday ? 'today' : ''],
         children: [headerDiv, chipsDiv],
+        attrs: { title: `Switch to Day timetable view for ${dStr}`, style: 'cursor: pointer;' },
         events: {
-          click: () => this.openDayModal(day, month, year, dStr)
+          click: () => this.jumpToDay(year, month, day)
         }
       });
       grid.appendChild(cell);
@@ -674,9 +744,17 @@ class CalendarGridComponent extends UIComponent {
     const totalCells = firstDay + daysInMonth;
     const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
     for (let i = 1; i <= remaining; i++) {
+      const targetDate = new Date(year, month + 1, i);
       const numSpan = this.createElement('span', { className: 'cell-day-num', text: String(i) });
       const headerDiv = this.createElement('div', { className: 'cell-header', children: [numSpan] });
-      grid.appendChild(this.createElement('div', { className: ['calendar-cell', 'other-month'], children: [headerDiv] }));
+      grid.appendChild(this.createElement('div', {
+        className: ['calendar-cell', 'other-month'],
+        children: [headerDiv],
+        attrs: { title: `Switch to Day view for ${i}`, style: 'cursor: pointer;' },
+        events: {
+          click: () => this.jumpToDay(targetDate.getFullYear(), targetDate.getMonth(), i)
+        }
+      }));
     }
 
     return grid;

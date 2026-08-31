@@ -5,14 +5,16 @@ services:
     image: postgres:15-alpine
     container_name: habitizer-postgres
     environment:
-      POSTGRES_USER: habitizer
-      POSTGRES_PASSWORD: habitizer_secret
-      POSTGRES_DB: habitizer_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_MULTIPLE_DATABASES: habitizer_auth_db,habitizer_habit_db,habitizer_analytics_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+      - ./scripts/init_auth_db.sql:/docker-entrypoint-initdb.d/01_init_auth_db.sql
+      - ./scripts/init_habit_db.sql:/docker-entrypoint-initdb.d/02_init_habit_db.sql
+      - ./scripts/init_analytics_db.sql:/docker-entrypoint-initdb.d/03_init_analytics_db.sql
     networks:
       - habitizer-network
 
@@ -54,9 +56,9 @@ services:
       - PORT=8001
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_USER=habitizer
-      - DB_PASSWORD=habitizer_secret
-      - DB_NAME=habitizer_db
+      - DB_USER=postgres
+      - DB_PASSWORD=123
+      - DB_NAME=habitizer_auth_db
       - JWT_SECRET=super_secret_jwt_key_habitizer_2026
     depends_on:
       - postgres
@@ -74,9 +76,9 @@ services:
       - PORT=8002
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_USER=habitizer
-      - DB_PASSWORD=habitizer_secret
-      - DB_NAME=habitizer_db
+      - DB_USER=postgres
+      - DB_PASSWORD=123
+      - DB_NAME=habitizer_habit_db
     depends_on:
       - postgres
     networks:
@@ -93,9 +95,9 @@ services:
       - PORT=8003
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_USER=habitizer
-      - DB_PASSWORD=habitizer_secret
-      - DB_NAME=habitizer_db
+      - DB_USER=postgres
+      - DB_PASSWORD=123
+      - DB_NAME=habitizer_analytics_db
     depends_on:
       - postgres
     networks:
@@ -109,9 +111,9 @@ services:
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_USER=habitizer
-      - DB_PASSWORD=habitizer_secret
-      - DB_NAME=habitizer_db
+      - DB_USER=postgres
+      - DB_PASSWORD=123
+      - DB_NAME=habitizer_habit_db
     depends_on:
       - postgres
     networks:

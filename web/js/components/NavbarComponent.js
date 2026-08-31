@@ -1,6 +1,7 @@
 /**
  * NavbarComponent — Responsive Top Navigation Bar & Floating Theme Switcher Component.
- * Single Responsibility: Build and render top navigation header and floating theme toggle using DOM APIs.
+ * Single Responsibility: Build and render top navigation header, mobile dropdown menu with auth actions,
+ * and floating theme toggle using DOM APIs per UML 2.0 specifications.
  */
 class NavbarComponent extends UIComponent {
   /**
@@ -28,7 +29,7 @@ class NavbarComponent extends UIComponent {
     const isAuthPage = activePageId === 'login' || activePageId === 'register';
     const isLoggedIn = window.API && typeof window.API.isAuthenticated === 'function' ? window.API.isAuthenticated() : false;
 
-    // Navigation Menu items definition
+    // Navigation Menu items definition (Desktop & Shared Links)
     let navItems;
     if (isAuthPage || !isLoggedIn) {
       navItems = [
@@ -57,7 +58,7 @@ class NavbarComponent extends UIComponent {
     });
 
     // 2. Grid Container
-    // 2a. Nav Left (Profile Pill or Log In link)
+    // 2a. Nav Left (Desktop Profile Pill)
     const navLeft = this.createElement('div', { className: 'nav-left' });
     if (isLoggedIn) {
       const avatarCircle = this.createElement('div', {
@@ -77,13 +78,13 @@ class NavbarComponent extends UIComponent {
       navLeft.appendChild(profilePill);
     }
 
-    // 2b. Nav Center (Menu Links + Mobile Extras)
+    // 2b. Nav Center (Menu Links + Mobile-Only Dropdown Extras)
     const navCenter = this.createElement('nav', {
       id: 'top-nav-menu',
       className: 'nav-center'
     });
 
-    // Mobile Top Row in Dropdown
+    // Mobile Top Profile Row in Dropdown (Mobile Phone Only)
     if (isLoggedIn) {
       const mobileAvatar = this.createElement('div', {
         className: 'user-avatar-circle',
@@ -100,7 +101,7 @@ class NavbarComponent extends UIComponent {
       navCenter.appendChild(mobileProfileLink);
     }
 
-    // Standard Nav Links
+    // Standard Nav Links (Desktop & Mobile)
     navItems.forEach(item => {
       const iconSpan = this.createElement('span', { attrs: { 'data-icon': item.icon, 'data-size': '16' } });
       const labelSpan = this.createElement('span', { text: item.label });
@@ -113,11 +114,35 @@ class NavbarComponent extends UIComponent {
       navCenter.appendChild(link);
     });
 
-    // Mobile Auth Actions in Dropdown (Log In / Register or Log Out)
-    if (isLoggedIn) {
+    // Mobile-Only Auth Actions in Dropdown Menu
+    if (!isLoggedIn) {
+      // Mobile-Only Log In Link
+      const loginIcon = this.createElement('span', { attrs: { 'data-icon': 'user', 'data-size': '16' } });
+      const loginText = this.createElement('span', { text: 'Log In' });
+      const mobileLoginLink = this.createElement('a', {
+        id: 'mobile-nav-login',
+        className: ['nav-link', 'mobile-only-link', activePageId === 'login' ? 'active' : ''],
+        attrs: { href: '/login' },
+        children: [loginIcon, loginText]
+      });
+      navCenter.appendChild(mobileLoginLink);
+
+      // Mobile-Only Register Link
+      const regIcon = this.createElement('span', { attrs: { 'data-icon': 'sparkles', 'data-size': '16' } });
+      const regText = this.createElement('span', { text: 'Register' });
+      const mobileRegLink = this.createElement('a', {
+        id: 'mobile-nav-register',
+        className: ['nav-link', 'mobile-only-link', activePageId === 'register' ? 'active' : ''],
+        attrs: { href: '/register' },
+        children: [regIcon, regText]
+      });
+      navCenter.appendChild(mobileRegLink);
+    } else {
+      // Mobile-Only Log Out Link
       const mobileExitIcon = this.createElement('span', { attrs: { 'data-icon': 'exit', 'data-size': '16' } });
       const mobileLogoutText = this.createElement('span', { text: 'Log Out' });
       const mobileLogoutLink = this.createElement('a', {
+        id: 'mobile-nav-logout',
         className: ['nav-link', 'mobile-only-link', 'mobile-logout-link'],
         attrs: { href: '/login' },
         children: [mobileExitIcon, mobileLogoutText],
@@ -134,7 +159,7 @@ class NavbarComponent extends UIComponent {
       navCenter.appendChild(mobileLogoutLink);
     }
 
-    // 2c. Nav Right (New Habit CTA or Login Button + Mobile Toggle)
+    // 2c. Nav Right (New Habit CTA on Mobile/Tablet + Hamburger Menu Button)
     const navRight = this.createElement('div', { className: 'nav-right' });
     if (isLoggedIn) {
       const plusIcon = this.createElement('span', { attrs: { 'data-icon': 'plus', 'data-size': '16' } });
@@ -164,7 +189,7 @@ class NavbarComponent extends UIComponent {
       children: [navLeft, navCenter, navRight]
     });
 
-    // 3. Far Right Outer Actions (Desktop Only Log In / Log Out / Register)
+    // 3. Far Right Outer Actions (Desktop-Only Button: Register / Log In / Log Out)
     const navActionsOuter = this.createElement('div', { className: 'nav-actions-outer' });
     if (isAuthPage) {
       if (activePageId === 'login') {

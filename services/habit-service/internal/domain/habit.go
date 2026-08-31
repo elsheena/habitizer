@@ -2,6 +2,7 @@ package domain
 
 import "time"
 
+// Habit represents the core habit substitution entity
 type Habit struct {
 	ID               string    `json:"id"`
 	UserID           string    `json:"user_id"`
@@ -17,6 +18,7 @@ type Habit struct {
 	UpdatedAt        time.Time `json:"updated_at"`
 }
 
+// CreateHabitDTO defines the payload required to construct a new Habit
 type CreateHabitDTO struct {
 	UserID           string `json:"user_id"`
 	UserTier         string `json:"user_tier"` // "free" or "premium"
@@ -29,70 +31,8 @@ type CreateHabitDTO struct {
 	Category         string `json:"category"`
 }
 
-type SuggestedReplacement struct {
-	ID          string `json:"id"`
-	Category    string `json:"category"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	IconName    string `json:"icon_name"`
-}
-
-type DailyCheckin struct {
-	ID              string    `json:"id"`
-	UserID          string    `json:"user_id"`
-	CheckinDate     string    `json:"checkin_date"`
-	HabitID         string    `json:"habit_id"`
-	DidBadHabit     bool      `json:"did_bad_habit"`
-	UsedReplacement bool      `json:"used_replacement"`
-	ReplacementNote string    `json:"replacement_note"`
-	LoggedAt        time.Time `json:"logged_at"`
-}
-
-type CreateDailyCheckinDTO struct {
-	UserID          string `json:"user_id"`
-	CheckinDate     string `json:"checkin_date"`
-	HabitID         string `json:"habit_id"`
-	DidBadHabit     bool   `json:"did_bad_habit"`
-	UsedReplacement bool   `json:"used_replacement"`
-	ReplacementNote string `json:"replacement_note"`
-}
-
-type PromoteReplacementDTO struct {
-	UserID           string `json:"user_id"`
-	HabitID          string `json:"habit_id"`
-	ReplacementHabit string `json:"replacement_habit"`
-}
-
-type DailyCheckinResponse struct {
-	Checkin                *DailyCheckin `json:"checkin"`
-	SuggestPromotion       bool          `json:"suggest_promotion"`
-	SuggestedReplacement   string        `json:"suggested_replacement,omitempty"`
-	PromotionSuggestionMsg string        `json:"promotion_suggestion_msg,omitempty"`
-}
-
-type CalendarEventDTO struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Date        string `json:"date"`
-	StartTime   string `json:"start_time"`
-	EndTime     string `json:"end_time"`
-	Location    string `json:"location"`
-	Description string `json:"description"`
-}
-
-type AutoScheduleDTO struct {
-	UserID string             `json:"user_id"`
-	Date   string             `json:"date"`
-	Events []CalendarEventDTO `json:"events"`
-}
-
+// UpdateHabitTimeDTO contains data needed to reschedule a habit
 type UpdateHabitTimeDTO struct {
 	HabitID       string `json:"habit_id"`
 	ScheduledTime string `json:"scheduled_time"`
-}
-
-type AutoScheduleResponseDTO struct {
-	Habits           []*Habit `json:"habits"`
-	AdjustmentsCount int      `json:"adjustments_count"`
-	Message          string   `json:"message"`
 }

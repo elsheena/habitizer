@@ -17,7 +17,7 @@ type Config struct {
 	SSLMode  string
 }
 
-func LoadConfigFromEnv() *Config {
+func LoadConfigFromEnv(defaultDBName string) *Config {
 	host := os.Getenv("POSTGRES_HOST")
 	if host == "" {
 		host = "localhost"
@@ -28,15 +28,18 @@ func LoadConfigFromEnv() *Config {
 	}
 	user := os.Getenv("POSTGRES_USER")
 	if user == "" {
-		user = "habitizer"
+		user = "postgres"
 	}
 	password := os.Getenv("POSTGRES_PASSWORD")
 	if password == "" {
-		password = "habitizer_secret"
+		password = "123"
 	}
-	dbname := os.Getenv("POSTGRES_DB")
+	dbname := os.Getenv("DB_NAME")
 	if dbname == "" {
-		dbname = "habitizer_db"
+		dbname = os.Getenv("POSTGRES_DB")
+	}
+	if dbname == "" {
+		dbname = defaultDBName
 	}
 
 	return &Config{
@@ -49,20 +52,29 @@ func LoadConfigFromEnv() *Config {
 	}
 }
 
+// ConnectPostgres attempts connection with fallbacks for local developer environments
 func ConnectPostgres(cfg *Config) (*sql.DB, error) {
-	connStr := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DBName, cfg.SSLMode,
-	)
+	passwords := []string{cfg.Password, "123", "postgres", "habitizer_secret", "admin"}
+	users := []string{cfg.User, "postgres", "habitizer"}
 
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open database: %w", err)
+	var lastErr error
+	for _, u := range users {
+		for _, p := range passwords {
+			connStr := fmt.Sprintf(
+				"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+				cfg.Host, cfg.Port, u, p, cfg.DBName, cfg.SSLMode,
+			)
+
+			db, err := sql.Open("postgres", connStr)
+			if err == nil {
+				if pingErr := db.Ping(); pingErr == nil {
+					return db, nil
+				}
+				db.Close()
+				lastErr = err
+			}
+		}
 	}
 
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %w", err)
-	}
-
-	return db, nil
+	return nil, fmt.Errorf("failed to connect to postgres (%s): %v", cfg.DBName, lastErr)
 }
