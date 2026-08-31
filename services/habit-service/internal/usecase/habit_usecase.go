@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	pkgErrors "github.com/habitizer/pkg/errors"
+	"github.com/habitizer/pkg/uuid"
 	"github.com/habitizer/services/habit-service/internal/domain"
 	"github.com/habitizer/services/habit-service/internal/repository/postgres"
 )
@@ -20,14 +21,24 @@ type HabitUsecase interface {
 	PromoteReplacement(ctx context.Context, dto domain.PromoteReplacementDTO) (*domain.Habit, error)
 	UpdateHabitScheduledTime(ctx context.Context, dto domain.UpdateHabitTimeDTO) (*domain.Habit, error)
 	AutoScheduleHabits(ctx context.Context, dto domain.AutoScheduleDTO) (*domain.AutoScheduleResponseDTO, error)
+
+	// Calendar Event CRUD
+	CreateCalendarEvent(ctx context.Context, dto domain.CalendarEventDTO) (*domain.CalendarEvent, error)
+	GetCalendarEvents(ctx context.Context, userID string) ([]*domain.CalendarEvent, error)
+	UpdateCalendarEvent(ctx context.Context, dto domain.CalendarEventDTO) (*domain.CalendarEvent, error)
+	DeleteCalendarEvent(ctx context.Context, id string) error
 }
 
 type habitUsecase struct {
-	repo postgres.HabitRepository
+	repo         postgres.HabitRepository
+	calendarRepo postgres.CalendarEventRepository
 }
 
-func NewHabitUsecase(repo postgres.HabitRepository) HabitUsecase {
-	return &habitUsecase{repo: repo}
+func NewHabitUsecase(repo postgres.HabitRepository, calRepo postgres.CalendarEventRepository) HabitUsecase {
+	return &habitUsecase{
+		repo:         repo,
+		calendarRepo: calRepo,
+	}
 }
 
 func (u *habitUsecase) CreateHabit(ctx context.Context, dto domain.CreateHabitDTO) (*domain.Habit, error) {
@@ -52,7 +63,7 @@ func (u *habitUsecase) CreateHabit(ctx context.Context, dto domain.CreateHabitDT
 	}
 
 	habit := &domain.Habit{
-		ID:               "hbt_" + dto.BadHabit,
+		ID:               "hbt_" + uuid.NewString(),
 		UserID:           dto.UserID,
 		BadHabit:         dto.BadHabit,
 		Frequency:        freq,
@@ -85,7 +96,7 @@ func (u *habitUsecase) LogOccurrence(ctx context.Context, dto domain.LogOccurren
 	}
 
 	log := &domain.HabitLog{
-		ID:      "log_" + dto.HabitID,
+		ID:      "log_" + uuid.NewString(),
 		HabitID: dto.HabitID,
 		UserID:  dto.UserID,
 		Status:  dto.Status,
@@ -113,7 +124,7 @@ func (u *habitUsecase) ProcessDailyCheckin(ctx context.Context, dto domain.Creat
 	}
 
 	checkin := &domain.DailyCheckin{
-		ID:              "chk_" + dto.HabitID + "_" + dto.CheckinDate,
+		ID:              "chk_" + uuid.NewString(),
 		UserID:          dto.UserID,
 		CheckinDate:     dto.CheckinDate,
 		HabitID:         dto.HabitID,
@@ -191,7 +202,6 @@ func (u *habitUsecase) AutoScheduleHabits(ctx context.Context, dto domain.AutoSc
 		}, nil
 	}
 
-	// Safe fallback slots in waking hours: 08:00, 13:00, 18:00, 20:15
 	candidateSlots := []string{"08:00", "13:00", "18:00", "20:15", "07:30", "16:15"}
 	adjustments := 0
 
@@ -209,4 +219,80 @@ func (u *habitUsecase) AutoScheduleHabits(ctx context.Context, dto domain.AutoSc
 		AdjustmentsCount: adjustments,
 		Message:          "Habits successfully auto-fitted into free calendar slots without event conflicts",
 	}, nil
+}
+
+// Calendar Event CRUD
+func (u *habitUsecase) CreateCalendarEvent(ctx context.Context, dto domain.CalendarEventDTO) (*domain.CalendarEvent, error) {
+	if dto.Title == "" {
+		return nil, pkgErrors.ErrInvalidInput
+	}
+
+	ev := &domain.CalendarEvent{
+		ID:            dto.ID,
+		UserID:        dto.UserID,
+		Title:         dto.Title,
+		Description:   dto.Description,
+		Date:          dto.Date,
+		StartTime:     dto.StartTime,
+		EndTime:       dto.EndTime,
+		Location:      dto.Location,
+		Tag:           dto.Tag,
+		IsGoogleEvent: dto.IsGoogleEvent,
+	}
+	if ev.ID == "" {
+		ev.ID = "ev_" + uuid.NewString()
+	}
+	if ev.UserID == "" {
+		ev.UserID = "usr_demo"
+	}
+	if ev.Date == "" {
+		ev.Date = "2026-08-28"
+	}
+	if ev.StartTime == "" {
+		ev.StartTime = "09:00"
+	}
+	if ev.EndTime == "" {
+		ev.EndTime = "10:00"
+	}
+
+	if err := u.calendarRepo.CreateEvent(ctx, ev); err != nil {
+		return nil, err
+	}
+	return ev, nil
+}
+
+func (u *habitUsecase) GetCalendarEvents(ctx context.Context, userID string) ([]*domain.CalendarEvent, error) {
+	if userID == "" {
+		userID = "usr_demo"
+	}
+	return u.calendarRepo.GetEventsByUserID(ctx, userID)
+}
+
+func (u *habitUsecase) UpdateCalendarEvent(ctx context.Context, dto domain.CalendarEventDTO) (*domain.CalendarEvent, error) {
+	if dto.ID == "" {
+		return nil, pkgErrors.ErrInvalidInput
+	}
+	ev := &domain.CalendarEvent{
+		ID:            dto.ID,
+		UserID:        dto.UserID,
+		Title:         dto.Title,
+		Description:   dto.Description,
+		Date:          dto.Date,
+		StartTime:     dto.StartTime,
+		EndTime:       dto.EndTime,
+		Location:      dto.Location,
+		Tag:           dto.Tag,
+		IsGoogleEvent: dto.IsGoogleEvent,
+	}
+	if err := u.calendarRepo.UpdateEvent(ctx, ev); err != nil {
+		return nil, err
+	}
+	return ev, nil
+}
+
+func (u *habitUsecase) DeleteCalendarEvent(ctx context.Context, id string) error {
+	if id == "" {
+		return pkgErrors.ErrInvalidInput
+	}
+	return u.calendarRepo.DeleteEvent(ctx, id)
 }

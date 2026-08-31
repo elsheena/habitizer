@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/habitizer/pkg/database"
 	"github.com/habitizer/pkg/logger"
 	handler "github.com/habitizer/services/analytics-service/internal/handler/http"
 	"github.com/habitizer/services/analytics-service/internal/repository/postgres"
@@ -17,7 +18,16 @@ func main() {
 		port = "8003"
 	}
 
-	repo := postgres.NewAnalyticsRepository()
+	// Database-per-service: Connect to habitizer_analytics_db
+	dbCfg := database.LoadConfigFromEnv("habitizer_analytics_db")
+	db, err := database.ConnectPostgres(dbCfg)
+	if err != nil {
+		log.Warn("Could not connect to PostgreSQL analytics database (%s): %v. Using in-memory fallback.", dbCfg.DBName, err)
+	} else {
+		log.Info("Connected to PostgreSQL analytics database: %s", dbCfg.DBName)
+	}
+
+	repo := postgres.NewAnalyticsRepository(db)
 	uc := usecase.NewAnalyticsUsecase(repo)
 	h := handler.NewAnalyticsHandler(uc)
 
