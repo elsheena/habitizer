@@ -1,7 +1,8 @@
 /**
- * CalendarService — Google Calendar Integration & Smart Habit Free Slot Scheduler.
- * Single Responsibility: Ingest Google Calendar ICS/iCal feeds, discover free time gaps,
- * detect event conflicts, and schedule healthy habit substitution routines into empty slots.
+ * CalendarService — Google Calendar Integration & Smart Free Slot Scheduler.
+ * Single Responsibility: Ingest Google Calendar feeds, manage Calendar Events via Go Backend API,
+ * support recurring schedule scoping ('single' date override, 'future' transition, 'all' series update),
+ * discover free time gaps, detect event conflicts, and schedule healthy habit substitution routines.
  *
  * Implemented per UML 2.0 specifications.
  */
@@ -15,43 +16,32 @@ class CalendarService {
     this._auth = authService;
     this._stateRepo = stateRepo;
     this._backendSync = backendSync;
+    this._apiBase = window.location.origin.includes(':8000') ? '' : 'http://localhost:8000';
   }
 
   // =========================================================================
   // Google Calendar Integration & State Management
   // =========================================================================
 
-  /**
-   * Check if Google Calendar is currently connected.
-   * @returns {Promise<boolean>}
-   */
   async isConnected() {
     const user = await this._auth.getCurrentUser();
     const state = this._stateRepo.load(user.id);
     return Boolean(state.googleCalendarSynced);
   }
 
-  /**
-   * Get current calendar sync metadata.
-   * @returns {Promise<Object>}
-   */
   async getSyncInfo() {
     const user = await this._auth.getCurrentUser();
     const state = this._stateRepo.load(user.id);
+    const events = await this.getEvents();
     return {
       connected: Boolean(state.googleCalendarSynced),
       email: state.googleCalendarEmail || (state.googleCalendarSynced ? (user.email || 'alex.doe@gmail.com') : ''),
       icalUrl: state.googleCalendarUrl || '',
       lastSyncedAt: state.googleCalendarLastSync || null,
-      eventCount: (state.calendarEvents || []).length
+      eventCount: (events || []).length
     };
   }
 
-  /**
-   * Connect Google Calendar via iCal / ICS feed link.
-   * @param {string} icalUrl
-   * @returns {Promise<{success: boolean, eventsCount: number, message: string}>}
-   */
   async connectWithIcalUrl(icalUrl) {
     if (!icalUrl || !icalUrl.trim()) {
       throw new Error('Please provide a valid Google Calendar iCal / ICS feed link.');
@@ -61,11 +51,9 @@ class CalendarService {
     let events = [];
 
     try {
-      // Fetch feed via proxy/fetch
       events = await this.fetchAndParseIcal(cleanUrl);
     } catch (err) {
       console.warn('Direct iCal fetch notice, using parsed representation with provided URL:', err);
-      // Generate synthetic schedule linked to this calendar
       events = CalendarService.generateDemoCalendarEvents();
     }
 
@@ -80,6 +68,14 @@ class CalendarService {
 
     this._stateRepo.save(user.id, state);
 
+    for (const ev of events) {
+      try {
+        await this.addEvent({ ...ev, user_id: user.id });
+      } catch {
+        // ignore duplicate
+      }
+    }
+
     return {
       success: true,
       eventsCount: events.length,
@@ -87,11 +83,6 @@ class CalendarService {
     };
   }
 
-  /**
-   * Connect Google Calendar via Google Account sign-in (or simulated Google OAuth).
-   * @param {string} [googleEmail]
-   * @returns {Promise<{success: boolean, eventsCount: number, message: string}>}
-   */
   async connectWithGoogleAccount(googleEmail) {
     const user = await this._auth.getCurrentUser();
     const state = this._stateRepo.load(user.id);
@@ -107,6 +98,14 @@ class CalendarService {
 
     this._stateRepo.save(user.id, state);
 
+    for (const ev of events) {
+      try {
+        await this.addEvent({ ...ev, user_id: user.id });
+      } catch {
+        // ignore
+      }
+    }
+
     return {
       success: true,
       eventsCount: events.length,
@@ -114,10 +113,6 @@ class CalendarService {
     };
   }
 
-  /**
-   * Disconnect Google Calendar and clear synced calendar events.
-   * @returns {Promise<boolean>}
-   */
   async disconnect() {
     const user = await this._auth.getCurrentUser();
     const state = this._stateRepo.load(user.id);
@@ -131,20 +126,43 @@ class CalendarService {
     return true;
   }
 
-  /**
-   * Retrieve all cached Google Calendar events.
-   * @returns {Promise<Array<Object>>}
-   */
   async getEvents() {
     const user = await this._auth.getCurrentUser();
     const state = this._stateRepo.load(user.id);
 
-    if (!state.googleCalendarSynced) {
-      return [];
+    try {
+      const resp = await fetch(`${this._apiBase}/api/v1/habits/calendar-events?user_id=${encodeURIComponent(user.id)}`);
+      if (resp.ok) {
+        const json = await resp.json();
+        if (json.data && Array.isArray(json.data) && json.data.length > 0) {
+          const mapped = json.data.map(e => {
+            const cached = (state.calendarEvents || []).find(c => c.id === e.id);
+            return {
+              id: e.id,
+              title: e.title,
+              description: e.description || '',
+              date: e.date,
+              startTime: e.start_time || e.startTime,
+              endTime: e.end_time || e.endTime,
+              location: e.location || '',
+              tag: e.tag || 'General',
+              repeat: e.repeat || (cached ? cached.repeat : 'none') || 'none',
+              isRecurring: Boolean(e.repeat && e.repeat !== 'none'),
+              isGoogleEvent: Boolean(e.is_google_event),
+              date_overrides: cached ? (cached.date_overrides || {}) : {},
+              future_overrides: cached ? (cached.future_overrides || []) : []
+            };
+          });
+          state.calendarEvents = mapped;
+          this._stateRepo.save(user.id, state);
+          return mapped;
+        }
+      }
+    } catch (e) {
+      console.warn('Backend calendar fetch notice, loading cache:', e);
     }
 
     if (!state.calendarEvents || state.calendarEvents.length === 0) {
-      // Auto-populate demo events if connected but empty
       state.calendarEvents = CalendarService.generateDemoCalendarEvents();
       this._stateRepo.save(user.id, state);
     }
@@ -152,40 +170,56 @@ class CalendarService {
     return state.calendarEvents;
   }
 
-  /**
-   * Add a new custom calendar event.
-   * @param {Object} eventData
-   * @returns {Promise<Object>}
-   */
   async addEvent(eventData) {
     const user = await this._auth.getCurrentUser();
     const state = this._stateRepo.load(user.id);
     if (!state.calendarEvents) state.calendarEvents = [];
 
+    const repeatVal = eventData.repeat || 'none';
+    const isRec = repeatVal === 'daily' || repeatVal === 'weekly' || repeatVal === 'weekdays';
+
     const newEvent = {
       id: eventData.id || ('ev_' + Math.random().toString(36).substr(2, 9)),
+      user_id: user.id,
       title: eventData.title || 'Untitled Event',
       description: eventData.description || '',
       location: eventData.location || '',
       date: eventData.date || '2026-08-28',
       startTime: eventData.startTime || '09:00',
       endTime: eventData.endTime || '10:00',
+      start_time: eventData.startTime || '09:00',
+      end_time: eventData.endTime || '10:00',
       tag: eventData.tag || 'General',
+      repeat: repeatVal,
+      isRecurring: isRec,
       isGoogleEvent: Boolean(eventData.isGoogleEvent),
+      is_google_event: Boolean(eventData.isGoogleEvent),
+      date_overrides: {},
+      future_overrides: [],
       createdAt: new Date().toISOString()
     };
 
-    state.calendarEvents.push(newEvent);
+    const existingIdx = state.calendarEvents.findIndex(e => e.id === newEvent.id);
+    if (existingIdx >= 0) {
+      state.calendarEvents[existingIdx] = newEvent;
+    } else {
+      state.calendarEvents.push(newEvent);
+    }
     this._stateRepo.save(user.id, state);
+
+    try {
+      await fetch(`${this._apiBase}/api/v1/habits/calendar-events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newEvent)
+      });
+    } catch (err) {
+      console.warn('Backend event creation sync notice:', err);
+    }
+
     return newEvent;
   }
 
-  /**
-   * Update an existing calendar event (e.g. for drag-and-drop or details edit).
-   * @param {string} id
-   * @param {Object} updates
-   * @returns {Promise<Object|null>}
-   */
   async updateEvent(id, updates) {
     const user = await this._auth.getCurrentUser();
     const state = this._stateRepo.load(user.id);
@@ -201,14 +235,97 @@ class CalendarService {
     };
 
     this._stateRepo.save(user.id, state);
+
+    try {
+      const payload = {
+        ...state.calendarEvents[idx],
+        start_time: state.calendarEvents[idx].startTime,
+        end_time: state.calendarEvents[idx].endTime,
+        user_id: user.id
+      };
+      await fetch(`${this._apiBase}/api/v1/habits/calendar-events?id=${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      console.warn('Backend event update sync notice:', err);
+    }
+
     return state.calendarEvents[idx];
   }
 
-  /**
-   * Delete a calendar event by ID.
-   * @param {string} id
-   * @returns {Promise<boolean>}
-   */
+  async updateEventScheduleScope(eventId, scope, targetDateKey, newStartTime, newEndTime, eventTitle) {
+    const user = await this._auth.getCurrentUser();
+    const state = this._stateRepo.load(user.id);
+    if (!state.calendarEvents) state.calendarEvents = [];
+
+    const target = state.calendarEvents.find(e => e.id === eventId || (eventTitle && e.title === eventTitle));
+    if (!target) return null;
+    const title = eventTitle || target.title;
+
+    if (scope === 'all') {
+      for (const ev of state.calendarEvents) {
+        if (ev.title === title || ev.id === eventId) {
+          ev.startTime = newStartTime;
+          ev.endTime = newEndTime;
+          ev.start_time = newStartTime;
+          ev.end_time = newEndTime;
+          ev.date_overrides = {};
+          ev.future_overrides = [];
+          await this.updateEvent(ev.id, {
+            startTime: newStartTime,
+            endTime: newEndTime
+          });
+        }
+      }
+    } else if (scope === 'future') {
+      const origStartTime = target.startTime || '09:00';
+      const origEndTime = target.endTime || '10:00';
+
+      for (const ev of state.calendarEvents) {
+        if (ev.title === title || ev.id === eventId) {
+          if (!ev.future_overrides) ev.future_overrides = [];
+          ev.future_overrides.push({
+            fromDate: targetDateKey,
+            startTime: newStartTime,
+            endTime: newEndTime,
+            prevStartTime: origStartTime,
+            prevEndTime: origEndTime
+          });
+
+          if (ev.date && ev.date >= targetDateKey) {
+            ev.startTime = newStartTime;
+            ev.endTime = newEndTime;
+            await this.updateEvent(ev.id, {
+              startTime: newStartTime,
+              endTime: newEndTime
+            });
+          }
+        }
+      }
+    } else {
+      // scope === 'single' ("This event only"): Move this event to the target date and time directly
+      const ev = state.calendarEvents.find(e => e.id === eventId) || target;
+      if (ev) {
+        ev.date = targetDateKey;
+        ev.startTime = newStartTime;
+        ev.endTime = newEndTime;
+        ev.start_time = newStartTime;
+        ev.end_time = newEndTime;
+        if (ev.date_overrides) ev.date_overrides = {};
+        await this.updateEvent(ev.id, {
+          date: targetDateKey,
+          startTime: newStartTime,
+          endTime: newEndTime
+        });
+      }
+    }
+
+    this._stateRepo.save(user.id, state);
+    return target;
+  }
+
   async deleteEvent(id) {
     const user = await this._auth.getCurrentUser();
     const state = this._stateRepo.load(user.id);
@@ -216,6 +333,15 @@ class CalendarService {
 
     state.calendarEvents = state.calendarEvents.filter(e => e.id !== id);
     this._stateRepo.save(user.id, state);
+
+    try {
+      await fetch(`${this._apiBase}/api/v1/habits/calendar-events?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE'
+      });
+    } catch (err) {
+      console.warn('Backend event delete sync notice:', err);
+    }
+
     return true;
   }
 
@@ -223,14 +349,8 @@ class CalendarService {
   // iCal / ICS Feed Parser Engine
   // =========================================================================
 
-  /**
-   * Fetch and parse an iCal / ICS URL.
-   * @param {string} url
-   * @returns {Promise<Array<Object>>}
-   */
   async fetchAndParseIcal(url) {
     let fetchUrl = url.replace(/^webcal:\/\//i, 'https://');
-
     const resp = await fetch(fetchUrl);
     if (!resp.ok) {
       throw new Error(`Failed to fetch iCal feed (HTTP ${resp.status})`);
@@ -239,11 +359,6 @@ class CalendarService {
     return CalendarService.parseICSString(icsText);
   }
 
-  /**
-   * Parse raw ICS string into structured event objects.
-   * @param {string} icsContent
-   * @returns {Array<Object>}
-   */
   static parseICSString(icsContent) {
     if (!icsContent || typeof icsContent !== 'string') return [];
 
@@ -317,10 +432,6 @@ class CalendarService {
     return events.length > 0 ? events : CalendarService.generateDemoCalendarEvents();
   }
 
-  /**
-   * Helper to parse ICS DTSTART/DTEND values.
-   * @private
-   */
   static _parseIcsDate(dateStr) {
     if (!dateStr) return null;
     const clean = dateStr.replace(/[^0-9TZ]/g, '');
@@ -352,16 +463,6 @@ class CalendarService {
   // Smart Free Slot Discovery & Conflict Detection Algorithm
   // =========================================================================
 
-  /**
-   * Discover free time gaps on a specific date where there are NO calendar events.
-   * Scans waking hours (default 07:00 to 22:00).
-   *
-   * @param {string} dateStr — e.g. "2026-08-28"
-   * @param {Array<Object>} [events] — list of calendar events
-   * @param {string} [dayStart="07:00"]
-   * @param {string} [dayEnd="22:00"]
-   * @returns {Array<Object>} FreeTimeSlot objects
-   */
   getFreeSlotsForDate(dateStr, events = [], dayStart = '07:00', dayEnd = '22:00') {
     const dayEvents = (events || []).filter(e => {
       if (!e.date) return true;
@@ -419,10 +520,6 @@ class CalendarService {
     return freeSlots;
   }
 
-  /**
-   * Helper to format a FreeTimeSlot object.
-   * @private
-   */
   _createFreeSlot(dateStr, startMin, endMin, durationMins) {
     const sTime = CalendarService.minutesToTime(startMin);
     const eTime = CalendarService.minutesToTime(endMin);
@@ -444,13 +541,6 @@ class CalendarService {
     };
   }
 
-  /**
-   * Detect any conflicts between habits and Google Calendar events on a given date.
-   * @param {Array<Object>} habits
-   * @param {Array<Object>} events
-   * @param {string} dateStr
-   * @returns {Array<Object>} list of conflict records
-   */
   detectConflicts(habits = [], events = [], dateStr = '2026-08-28') {
     const conflicts = [];
     const dayEvents = (events || []).filter(e => !e.date || e.date === dateStr);
@@ -478,14 +568,6 @@ class CalendarService {
     return conflicts;
   }
 
-  /**
-   * Smart Habit Auto-Scheduler:
-   * Analyzes Google Calendar events, calculates free gaps where there are NO events,
-   * and automatically schedules/places healthy habit substitution routines into optimal free slots.
-   *
-   * @param {string} [targetDate="2026-08-28"]
-   * @returns {Promise<{updatedHabits: Array<Object>, adjustmentsCount: number, message: string}>}
-   */
   async autoScheduleHabitsIntoFreeSlots(targetDate = '2026-08-28') {
     const user = await this._auth.getCurrentUser();
     const state = this._stateRepo.load(user.id);
@@ -515,7 +597,6 @@ class CalendarService {
 
     const updatedHabits = habits.map((habit, idx) => {
       const lowerBad = (habit.bad_habit || '').toLowerCase();
-      const lowerRep = (habit.replacement_habit || '').toLowerCase();
       const lowerCat = (habit.category || '').toLowerCase();
 
       let preferredPeriod = 'Morning';
@@ -563,15 +644,6 @@ class CalendarService {
     };
   }
 
-  // =========================================================================
-  // Utility & Conversion Helpers
-  // =========================================================================
-
-  /**
-   * Convert "HH:MM" string to minutes from 00:00.
-   * @param {string} timeStr
-   * @returns {number}
-   */
   static timeToMinutes(timeStr) {
     if (!timeStr || !timeStr.includes(':')) return 0;
     const parts = timeStr.split(':');
@@ -580,11 +652,6 @@ class CalendarService {
     return (h * 60) + m;
   }
 
-  /**
-   * Convert minutes from 00:00 to "HH:MM".
-   * @param {number} totalMinutes
-   * @returns {string}
-   */
   static minutesToTime(totalMinutes) {
     const h = Math.floor(totalMinutes / 60) % 24;
     const m = totalMinutes % 60;
@@ -593,10 +660,6 @@ class CalendarService {
     return `${hStr}:${mStr}`;
   }
 
-  /**
-   * Generate a rich, realistic business schedule for demonstration & testing.
-   * @returns {Array<Object>}
-   */
   static generateDemoCalendarEvents() {
     return [
       {
@@ -607,6 +670,9 @@ class CalendarService {
         endTime: '09:45',
         location: 'Google Meet',
         description: 'Sprint updates, blockers, and architecture alignment.',
+        tag: 'Meeting',
+        repeat: 'none',
+        isRecurring: false,
         isGoogleEvent: true
       },
       {
@@ -617,6 +683,9 @@ class CalendarService {
         endTime: '12:15',
         location: 'Room 402 / Meet',
         description: 'Reviewing interactive habit calendar UI components.',
+        tag: 'Design',
+        repeat: 'none',
+        isRecurring: false,
         isGoogleEvent: true
       },
       {
@@ -627,6 +696,9 @@ class CalendarService {
         endTime: '16:00',
         location: 'Desk',
         description: 'Core backend microservice engineering.',
+        tag: 'Focus',
+        repeat: 'none',
+        isRecurring: false,
         isGoogleEvent: true
       },
       {
@@ -637,6 +709,9 @@ class CalendarService {
         endTime: '17:45',
         location: 'Virtual Hangout',
         description: 'Weekly team celebration and demo session.',
+        tag: 'Meeting',
+        repeat: 'none',
+        isRecurring: false,
         isGoogleEvent: true
       }
     ];
