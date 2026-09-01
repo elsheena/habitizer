@@ -21,7 +21,7 @@ type ScheduleOverrideRepository interface {
 type PostgresScheduleOverrideRepository struct {
 	db        *sql.DB
 	mu        sync.RWMutex
-	overrides map[string][]*domain.HabitScheduleOverride // keyed by habit_id
+	overrides map[string][]*domain.HabitScheduleOverride
 }
 
 func NewScheduleOverrideRepository(db *sql.DB) ScheduleOverrideRepository {
@@ -33,7 +33,7 @@ func NewScheduleOverrideRepository(db *sql.DB) ScheduleOverrideRepository {
 
 func (r *PostgresScheduleOverrideRepository) SaveOverride(ctx context.Context, override *domain.HabitScheduleOverride) error {
 	if override.ID == "" {
-		override.ID = uuid.New()
+		override.ID = "ovr_" + uuid.NewString()
 	}
 	if override.CreatedAt.IsZero() {
 		override.CreatedAt = time.Now()
@@ -43,7 +43,33 @@ func (r *PostgresScheduleOverrideRepository) SaveOverride(ctx context.Context, o
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	// 1. Update in-memory store
+	if override.Scope == domain.ScopeAll {
+		delete(r.overrides, override.HabitID)
+		if r.db != nil {
+			_, _ = r.db.ExecContext(ctx, `DELETE FROM habit_schedule_overrides WHERE habit_id = $1`, override.HabitID)
+		}
+		return nil
+	}
+
+	if override.Scope == domain.ScopeFuture {
+		var filtered []*domain.HabitScheduleOverride
+		for _, existing := range r.overrides[override.HabitID] {
+			if existing.TargetDate < override.TargetDate {
+				filtered = append(filtered, existing)
+			}
+		}
+		filtered = append(filtered, override)
+		r.overrides[override.HabitID] = filtered
+
+		if r.db != nil {
+			_, _ = r.db.ExecContext(ctx, `DELETE FROM habit_schedule_overrides WHERE habit_id = $1 AND target_date >= $2`, override.HabitID, override.TargetDate)
+			query := `INSERT INTO habit_schedule_overrides (id, habit_id, user_id, scope, target_date, new_scheduled_time, prev_scheduled_time, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+			_, _ = r.db.ExecContext(ctx, query, override.ID, override.HabitID, override.UserID, string(override.Scope), override.TargetDate, override.NewScheduledTime, override.PrevScheduledTime, override.CreatedAt, override.UpdatedAt)
+		}
+		return nil
+	}
+
+	// Single scope
 	list := r.overrides[override.HabitID]
 	replaced := false
 	for i, existing := range list {
@@ -57,28 +83,10 @@ func (r *PostgresScheduleOverrideRepository) SaveOverride(ctx context.Context, o
 		r.overrides[override.HabitID] = append(list, override)
 	}
 
-	// 2. Persist to PostgreSQL if connected
 	if r.db != nil {
-		query := `
-			INSERT INTO habit_schedule_overrides (id, habit_id, user_id, scope, target_date, new_scheduled_time, prev_scheduled_time, created_at, updated_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-			ON CONFLICT (id) DO UPDATE SET
-				new_scheduled_time = EXCLUDED.new_scheduled_time,
-				updated_at = EXCLUDED.updated_at
-		`
-		_, _ = r.db.ExecContext(ctx, query,
-			override.ID,
-			override.HabitID,
-			override.UserID,
-			string(override.Scope),
-			override.TargetDate,
-			override.NewScheduledTime,
-			override.PrevScheduledTime,
-			override.CreatedAt,
-			override.UpdatedAt,
-		)
+		query := `INSERT INTO habit_schedule_overrides (id, habit_id, user_id, scope, target_date, new_scheduled_time, prev_scheduled_time, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (id) DO UPDATE SET new_scheduled_time = EXCLUDED.new_scheduled_time, updated_at = EXCLUDED.updated_at`
+		_, _ = r.db.ExecContext(ctx, query, override.ID, override.HabitID, override.UserID, string(override.Scope), override.TargetDate, override.NewScheduledTime, override.PrevScheduledTime, override.CreatedAt, override.UpdatedAt)
 	}
-
 	return nil
 }
 
@@ -87,8 +95,7 @@ func (r *PostgresScheduleOverrideRepository) GetOverridesByHabitID(ctx context.C
 	defer r.mu.RUnlock()
 
 	if r.db != nil {
-		query := `SELECT id, habit_id, user_id, scope, target_date, new_scheduled_time, prev_scheduled_time, created_at, updated_at
-		          FROM habit_schedule_overrides WHERE habit_id = $1 ORDER BY target_date ASC`
+		query := `SELECT id, habit_id, user_id, scope, target_date, new_scheduled_time, prev_scheduled_time, created_at, updated_at FROM habit_schedule_overrides WHERE habit_id = $1 ORDER BY target_date ASC`
 		rows, err := r.db.QueryContext(ctx, query, habitID)
 		if err == nil {
 			defer rows.Close()
@@ -106,7 +113,6 @@ func (r *PostgresScheduleOverrideRepository) GetOverridesByHabitID(ctx context.C
 			}
 		}
 	}
-
 	return r.overrides[habitID], nil
 }
 
@@ -130,7 +136,6 @@ func (r *PostgresScheduleOverrideRepository) ClearOverridesForHabit(ctx context.
 	defer r.mu.Unlock()
 
 	delete(r.overrides, habitID)
-
 	if r.db != nil {
 		_, _ = r.db.ExecContext(ctx, `DELETE FROM habit_schedule_overrides WHERE habit_id = $1`, habitID)
 	}
@@ -143,21 +148,17 @@ func (r *PostgresScheduleOverrideRepository) GetEffectiveTime(ctx context.Contex
 		return baseTime, false, "base", nil
 	}
 
-	// 1. Check single date override
 	for _, o := range overrides {
 		if o.Scope == domain.ScopeSingle && o.TargetDate == dateKey {
 			return o.NewScheduledTime, true, "single", nil
 		}
 	}
 
-	// 2. Check future series overrides
 	var latestFuture *domain.HabitScheduleOverride
 	for _, o := range overrides {
-		if o.Scope == domain.ScopeFuture {
-			if o.TargetDate <= dateKey {
-				if latestFuture == nil || o.TargetDate > latestFuture.TargetDate {
-					latestFuture = o
-				}
+		if o.Scope == domain.ScopeFuture && o.TargetDate <= dateKey {
+			if latestFuture == nil || o.TargetDate > latestFuture.TargetDate {
+				latestFuture = o
 			}
 		}
 	}
@@ -165,6 +166,5 @@ func (r *PostgresScheduleOverrideRepository) GetEffectiveTime(ctx context.Contex
 	if latestFuture != nil {
 		return latestFuture.NewScheduledTime, true, "future", nil
 	}
-
 	return baseTime, false, "base", nil
 }

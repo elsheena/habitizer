@@ -1,7 +1,3 @@
-/**
- * EconomyService — Economy Client for Go Analytics-Service.
- * Single Responsibility: Delegate shop balance, streak freeze purchases, and screen-time passes to Go backend.
- */
 class EconomyService {
   constructor(authService, stateRepo) {
     this._auth = authService;
@@ -11,7 +7,7 @@ class EconomyService {
 
   async getBalance() {
     const user = await this._auth.getCurrentUser();
-    const userId = user.id || 'usr_demo';
+    const userId = user?.id || 'usr_demo';
 
     try {
       const res = await fetch(`${this._baseUrl}/api/v1/analytics/economy?user_id=${encodeURIComponent(userId)}`);
@@ -24,7 +20,7 @@ class EconomyService {
         return eco;
       }
     } catch (err) {
-      console.warn('Backend analytics-service unreachable, reading local economy cache:', err);
+      console.warn('Backend analytics economy notice:', err);
     }
 
     const state = this._stateRepo.load(userId);
@@ -33,8 +29,8 @@ class EconomyService {
 
   async buyStreakFreeze() {
     const user = await this._auth.getCurrentUser();
-    const userId = user.id || 'usr_demo';
-    const userTier = user.tier || 'free';
+    const userId = user?.id || 'usr_demo';
+    const userTier = user?.tier || 'free';
 
     const res = await fetch(`${this._baseUrl}/api/v1/analytics/economy/buy-freeze`, {
       method: 'POST',
@@ -55,22 +51,39 @@ class EconomyService {
   }
 
   async buyBundle() {
-    // 3 single freeze purchases
-    let lastEco;
-    for (let i = 0; i < 3; i++) {
-      lastEco = await this.buyStreakFreeze();
+    const user = await this._auth.getCurrentUser();
+    const userId = user?.id || 'usr_demo';
+
+    const res = await fetch(`${this._baseUrl}/api/v1/analytics/economy/buy-bundle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId })
+    });
+
+    const body = await res.json();
+    if (!res.ok) {
+      throw new Error(body.error || body.message || 'Failed to purchase streak freeze bundle.');
     }
-    return lastEco;
+
+    const eco = body.data || body;
+    const state = this._stateRepo.load(userId);
+    state.economy = eco;
+    this._stateRepo.save(userId, state);
+    return eco;
   }
 
   async redeemPass(mins, coinPrice) {
     const user = await this._auth.getCurrentUser();
-    const userId = user.id || 'usr_demo';
+    const userId = user?.id || 'usr_demo';
 
     const res = await fetch(`${this._baseUrl}/api/v1/analytics/economy/redeem-reward`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: userId, minutes: mins, coin_cost: coinPrice })
+      body: JSON.stringify({
+        user_id: userId,
+        reward_type: mins >= 30 ? 'screen_time_30m' : 'screen_time_15m',
+        currency_cost: coinPrice || (mins >= 30 ? 60 : 30)
+      })
     });
 
     const body = await res.json();
@@ -82,7 +95,13 @@ class EconomyService {
     const state = this._stateRepo.load(userId);
     state.economy = eco;
     this._stateRepo.save(userId, state);
-    return eco;
+
+    const passCode = 'HABIT-' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + mins + 'M';
+    return {
+      economy: eco,
+      passCode: passCode,
+      minutes: mins
+    };
   }
 }
 

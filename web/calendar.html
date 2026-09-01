@@ -6,6 +6,14 @@
   <title>Habit Calendar — Habitizer</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/calendar.css">
+  <script>
+    (function() {
+      const isAuth = localStorage.getItem('habitizer_logged_in') === 'true' && localStorage.getItem('habitizer_auth_token');
+      if (!isAuth) {
+        window.location.replace('/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
+      }
+    })();
+  </script>
 </head>
 <body class="cal-app-body">
   <div class="cal-layout-container">
@@ -494,22 +502,29 @@
   <script src="/js/core/UserStateRepository.js"></script>
   <script src="/js/core/ThemeManager.js"></script>
   <!-- Services Layer -->
-  <script src="/js/services/BackendSync.js"></script>
+  <script src="/js/services/CalendarTimeUtil.js"></script>
   <script src="/js/core/AuthService.js"></script>
   <script src="/js/services/HabitService.js"></script>
   <script src="/js/services/EconomyService.js"></script>
   <script src="/js/services/StreakService.js"></script>
   <script src="/js/services/CatalogService.js"></script>
+  <script src="/js/services/IcalParserService.js"></script>
+  <script src="/js/services/CalendarSyncService.js"></script>
   <script src="/js/services/CalendarService.js"></script>
   <script src="/js/services/CollisionEngine.js"></script>
   <!-- UI Components -->
   <script src="/js/components/UIComponent.js"></script>
   <script src="/js/components/ToastComponent.js"></script>
+  <script src="/js/components/NavbarMobileMenuComponent.js"></script>
   <script src="/js/components/NavbarComponent.js"></script>
   <script src="/js/components/DayLogModalComponent.js"></script>
   <script src="/js/components/SlotCreationModalComponent.js"></script>
   <script src="/js/components/EventDetailModalComponent.js"></script>
   <script src="/js/components/RescheduleScopeModalComponent.js"></script>
+  <script src="/js/components/CalendarDragDropController.js"></script>
+  <script src="/js/components/CalendarDateUtil.js"></script>
+  <script src="/js/components/CalendarMonthViewComponent.js"></script>
+  <script src="/js/components/CalendarFloatingCardRenderer.js"></script>
   <script src="/js/components/CalendarGridComponent.js"></script>
   <script src="/js/components/PremiumModalComponent.js"></script>
   <!-- API Facade & Page Controller -->

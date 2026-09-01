@@ -35,6 +35,7 @@ func main() {
 	mux.HandleFunc("/api/v1/analytics/streaks", h.GetStreaks)
 	mux.HandleFunc("/api/v1/analytics/economy", h.GetEconomy)
 	mux.HandleFunc("/api/v1/analytics/economy/buy-freeze", h.BuyStreakFreeze)
+	mux.HandleFunc("/api/v1/analytics/economy/buy-bundle", h.BuyFreezeBundle)
 	mux.HandleFunc("/api/v1/analytics/economy/redeem-reward", h.RedeemReward)
 	mux.HandleFunc("/api/v1/analytics/profile", h.GetUserProfile)
 

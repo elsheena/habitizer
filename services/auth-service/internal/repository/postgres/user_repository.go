@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 	"sync"
 	"time"
 
@@ -31,21 +32,22 @@ func NewUserRepository(db *sql.DB) UserRepository {
 
 	// Seed demo user in memory fallback
 	demoUser := &domain.User{
-		ID:        "usr_demo",
-		Email:     "alex.doe@habitizer.io",
-		FullName:  "Alex Doe",
-		Tier:      "free",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		ID:           "usr_demo",
+		Email:        "alex.doe@habitizer.io",
+		PasswordHash: "hashed_HabitSecure#2026",
+		FullName:     "Alex Doe",
+		Tier:         "free",
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 	repo.memUsers[demoUser.ID] = demoUser
 
-	// If DB connected, ensure schema table exists
+	// If DB connected, ensure schema table exists and seed demo user
 	if db != nil {
 		_, _ = db.Exec(`
 			CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 			CREATE TABLE IF NOT EXISTS users (
-				id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+				id VARCHAR(100) PRIMARY KEY,
 				email VARCHAR(255) UNIQUE NOT NULL,
 				password_hash VARCHAR(255) NOT NULL,
 				full_name VARCHAR(100) NOT NULL,
@@ -53,6 +55,9 @@ func NewUserRepository(db *sql.DB) UserRepository {
 				created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 				updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 			);
+			INSERT INTO users (id, email, password_hash, full_name, tier)
+			VALUES ('usr_demo', 'alex.doe@habitizer.io', 'hashed_HabitSecure#2026', 'Alex Doe', 'free')
+			ON CONFLICT (email) DO NOTHING;
 		`)
 	}
 
@@ -61,18 +66,26 @@ func NewUserRepository(db *sql.DB) UserRepository {
 
 func (r *PostgresUserRepository) CreateUser(ctx context.Context, user *domain.User) error {
 	if user.ID == "" {
-		user.ID = uuid.NewString()
+		user.ID = "usr_" + uuid.NewString()
 	}
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
 	if user.Tier == "" {
 		user.Tier = "free"
 	}
+	cleanEmail := strings.ToLower(strings.TrimSpace(user.Email))
+	user.Email = cleanEmail
+
+	// Save to memory
+	r.memMu.Lock()
+	r.memUsers[user.ID] = user
+	r.memMu.Unlock()
 
 	if r.db != nil {
 		query := `
 			INSERT INTO users (id, email, password_hash, full_name, tier, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)
+			ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash, full_name = EXCLUDED.full_name
 		`
 		_, err := r.db.ExecContext(ctx, query,
 			user.ID, user.Email, user.PasswordHash, user.FullName, user.Tier, user.CreatedAt, user.UpdatedAt,
@@ -80,27 +93,17 @@ func (r *PostgresUserRepository) CreateUser(ctx context.Context, user *domain.Us
 		if err != nil {
 			return err
 		}
-		return nil
 	}
 
-	// Fallback to memory
-	r.memMu.Lock()
-	defer r.memMu.Unlock()
-
-	for _, u := range r.memUsers {
-		if u.Email == user.Email {
-			return errors.New("email already registered")
-		}
-	}
-
-	r.memUsers[user.ID] = user
 	return nil
 }
 
 func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
+	cleanEmail := strings.ToLower(strings.TrimSpace(email))
+
 	if r.db != nil {
-		query := `SELECT id, email, password_hash, full_name, tier, created_at, updated_at FROM users WHERE email = $1`
-		row := r.db.QueryRowContext(ctx, query, email)
+		query := `SELECT id, email, password_hash, full_name, tier, created_at, updated_at FROM users WHERE LOWER(email) = LOWER($1)`
+		row := r.db.QueryRowContext(ctx, query, cleanEmail)
 
 		var u domain.User
 		err := row.Scan(&u.ID, &u.Email, &u.PasswordHash, &u.FullName, &u.Tier, &u.CreatedAt, &u.UpdatedAt)
@@ -114,7 +117,7 @@ func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) 
 	defer r.memMu.RUnlock()
 
 	for _, u := range r.memUsers {
-		if u.Email == email {
+		if strings.EqualFold(u.Email, cleanEmail) {
 			return u, nil
 		}
 	}

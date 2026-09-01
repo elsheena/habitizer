@@ -6,6 +6,14 @@
   <title>Add New Habit — Habitizer</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/create.css">
+  <script>
+    (function() {
+      const isAuth = localStorage.getItem('habitizer_logged_in') === 'true' && localStorage.getItem('habitizer_auth_token');
+      if (!isAuth) {
+        window.location.replace('/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
+      }
+    })();
+  </script>
 </head>
 <body class="sidebar-layout">
   <div id="navbar-container"></div>
@@ -73,6 +81,20 @@
                 <label class="form-label" for="scheduled_time">Alert Time</label>
                 <input class="form-input" type="time" id="scheduled_time" name="scheduled_time" value="22:30">
               </div>
+            </div>
+
+            <div class="form-group auth-form-group">
+              <label class="form-label">Preferred Time Window for Routine</label>
+              <div class="selection-pills-group" id="time-window-pills">
+                <button type="button" class="selection-pill" data-start="06:00" data-end="10:00">Morning (06:00–10:00)</button>
+                <button type="button" class="selection-pill" data-start="10:00" data-end="14:00">Midday (10:00–14:00)</button>
+                <button type="button" class="selection-pill" data-start="14:00" data-end="18:00">Afternoon (14:00–18:00)</button>
+                <button type="button" class="selection-pill active" data-start="18:00" data-end="22:00">Evening (18:00–22:00)</button>
+                <button type="button" class="selection-pill" data-start="22:00" data-end="02:00">Night (22:00–02:00)</button>
+              </div>
+              <input type="hidden" id="window-start-hidden" name="preferred_window_start" value="18:00">
+              <input type="hidden" id="window-end-hidden" name="preferred_window_end" value="22:00">
+              <span class="form-helper-text">When refreshing schedule, Habitizer finds the nearest free slot within this window.</span>
             </div>
           </div>
 
@@ -160,17 +182,20 @@
   <script src="/js/core/UserStateRepository.js"></script>
   <script src="/js/core/ThemeManager.js"></script>
   <!-- Services Layer -->
-  <script src="/js/services/BackendSync.js"></script>
+  <script src="/js/services/CalendarTimeUtil.js"></script>
   <script src="/js/core/AuthService.js"></script>
   <script src="/js/services/HabitService.js"></script>
   <script src="/js/services/EconomyService.js"></script>
   <script src="/js/services/StreakService.js"></script>
   <script src="/js/services/CatalogService.js"></script>
+  <script src="/js/services/IcalParserService.js"></script>
+  <script src="/js/services/CalendarSyncService.js"></script>
   <script src="/js/services/CalendarService.js"></script>
   <script src="/js/services/CollisionEngine.js"></script>
   <!-- UI Components -->
   <script src="/js/components/UIComponent.js"></script>
   <script src="/js/components/ToastComponent.js"></script>
+  <script src="/js/components/NavbarMobileMenuComponent.js"></script>
   <script src="/js/components/NavbarComponent.js"></script>
   <script src="/js/components/HabitCardComponent.js"></script>
   <script src="/js/components/StatsGridComponent.js"></script>
@@ -179,6 +204,10 @@
   <script src="/js/components/SlotCreationModalComponent.js"></script>
   <script src="/js/components/EventDetailModalComponent.js"></script>
   <script src="/js/components/RescheduleScopeModalComponent.js"></script>
+  <script src="/js/components/CalendarDragDropController.js"></script>
+  <script src="/js/components/CalendarDateUtil.js"></script>
+  <script src="/js/components/CalendarMonthViewComponent.js"></script>
+  <script src="/js/components/CalendarFloatingCardRenderer.js"></script>
   <script src="/js/components/CalendarGridComponent.js"></script>
   <script src="/js/components/PremiumModalComponent.js"></script>
   <!-- API Facade & Page Controller -->

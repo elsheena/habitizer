@@ -27,28 +27,52 @@ func main() {
 		log.Info("Connected to PostgreSQL habit database: %s", dbCfg.DBName)
 	}
 
+	// 1. Repositories
 	habitRepo := postgres.NewHabitRepository(db)
 	calRepo := postgres.NewCalendarEventRepository(db)
-	uc := usecase.NewHabitUsecase(habitRepo, calRepo)
-	h := handler.NewHabitHandler(uc)
+	overrideRepo := postgres.NewScheduleOverrideRepository(db)
+
+	// 2. Focused Single-Responsibility Usecases
+	habitUc := usecase.NewHabitUsecase(habitRepo)
+	overrideUc := usecase.NewScheduleOverrideUsecase(habitRepo, overrideRepo)
+	schedulerUc := usecase.NewSmartSchedulerUsecase(habitRepo, calRepo)
+	calendarEventUc := usecase.NewCalendarEventUsecase(calRepo)
+
+	// 3. Focused Single-Responsibility Handlers
+	habitHandler := handler.NewHabitHandler(habitUc)
+	overrideHandler := handler.NewScheduleOverrideHandler(overrideUc)
+	schedulerHandler := handler.NewSchedulerHandler(schedulerUc)
+	calendarEventHandler := handler.NewCalendarEventHandler(calendarEventUc)
 
 	mux := http.NewServeMux()
+
+	// Habit Loop CRUD & Check-in Routes
 	mux.HandleFunc("/api/v1/habits", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
-			h.CreateHabit(w, r)
+			habitHandler.CreateHabit(w, r)
 		} else if r.Method == http.MethodGet {
-			h.GetUserHabits(w, r)
+			habitHandler.GetUserHabits(w, r)
 		} else if r.Method == http.MethodDelete {
-			h.DeleteHabit(w, r)
+			habitHandler.DeleteHabit(w, r)
 		}
 	})
-	mux.HandleFunc("/api/v1/habits/log", h.LogOccurrence)
-	mux.HandleFunc("/api/v1/habits/suggestions", h.GetSuggestedReplacements)
-	mux.HandleFunc("/api/v1/habits/checkin", h.DailyCheckin)
-	mux.HandleFunc("/api/v1/habits/promote-replacement", h.PromoteReplacement)
-	mux.HandleFunc("/api/v1/habits/auto-schedule", h.AutoSchedule)
-	mux.HandleFunc("/api/v1/habits/update-time", h.UpdateHabitTime)
-	mux.HandleFunc("/api/v1/habits/calendar-events", h.HandleCalendarEvents)
+	mux.HandleFunc("/api/v1/habits/log", habitHandler.LogOccurrence)
+	mux.HandleFunc("/api/v1/habits/suggestions", habitHandler.GetSuggestedReplacements)
+	mux.HandleFunc("/api/v1/habits/checkin", habitHandler.DailyCheckin)
+	mux.HandleFunc("/api/v1/habits/promote-replacement", habitHandler.PromoteReplacement)
+	mux.HandleFunc("/api/v1/habits/update-time", habitHandler.UpdateHabitTime)
+
+	// Recurring Reschedule Scope & Effective Timetable Routes
+	mux.HandleFunc("/api/v1/habits/schedule-scope", overrideHandler.ApplyScheduleScope)
+	mux.HandleFunc("/api/v1/habits/effective-schedule", overrideHandler.GetEffectiveSchedule)
+
+	// Smart Free-Slot Discovery & Conflict Engine Routes
+	mux.HandleFunc("/api/v1/habits/free-slots", schedulerHandler.GetFreeSlots)
+	mux.HandleFunc("/api/v1/habits/conflicts", schedulerHandler.DetectConflicts)
+	mux.HandleFunc("/api/v1/habits/auto-schedule", schedulerHandler.AutoSchedule)
+
+	// Calendar Events CRUD Route
+	mux.HandleFunc("/api/v1/habits/calendar-events", calendarEventHandler.HandleCalendarEvents)
 
 	log.Info("Starting Habit Service on port %s", port)
 	if err := http.ListenAndServe(":"+port, mux); err != nil {

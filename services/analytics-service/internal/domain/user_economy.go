@@ -16,11 +16,25 @@ type BuyStreakFreezeDTO struct {
 	UserID string `json:"user_id"`
 }
 
+// BuyBundleDTO carries input for purchasing a 3-pack streak freeze bundle
+type BuyBundleDTO struct {
+	UserID string `json:"user_id"`
+}
+
 // RedeemRewardDTO carries input for redeeming leisure passes or treats
 type RedeemRewardDTO struct {
 	UserID       string `json:"user_id"`
 	RewardType   string `json:"reward_type"` // e.g. "screen_time_30m"
 	CurrencyCost int    `json:"currency_cost"`
+}
+
+// StreakSummaryDTO provides aggregated streak metrics for user consumption
+type StreakSummaryDTO struct {
+	CurrentStreak      int    `json:"current_streak"`
+	LongestStreak      int    `json:"longest_streak"`
+	TotalSubstitutions int    `json:"total_substitutions"`
+	TotalRelapses      int    `json:"total_relapses"`
+	SuccessRate        string `json:"success_rate"`
 }
 
 // EconomyTransaction records historical coin transactions

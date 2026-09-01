@@ -1,32 +1,20 @@
-/**
- * AppBootstrap — Unified Client Application Loader & Dependency Orchestrator.
- * Single Responsibility: Coordinate standardized loading order of Core, Services, Components,
- * and API Facade layers, eliminating Shotgun Surgery across HTML entry points.
- *
- * Implemented per UML 2.0 Architectural Specifications.
- */
 (function () {
   const scripts = [
-    // 1. Foundation & Design Icons
     '/js/icons.js',
-
-    // 2. Core Domain & Persistence Layer
     '/js/core/StorageService.js',
     '/js/core/UserRepository.js',
     '/js/core/UserStateRepository.js',
     '/js/core/ThemeManager.js',
-
-    // 3. Service Layer
-    '/js/services/BackendSync.js',
     '/js/core/AuthService.js',
+    '/js/services/CalendarTimeUtil.js',
     '/js/services/HabitService.js',
     '/js/services/EconomyService.js',
     '/js/services/StreakService.js',
     '/js/services/CatalogService.js',
+    '/js/services/IcalParserService.js',
+    '/js/services/CalendarSyncService.js',
     '/js/services/CalendarService.js',
     '/js/services/CollisionEngine.js',
-
-    // 4. UI Components Layer (OOP Hierarchy extending UIComponent)
     '/js/components/UIComponent.js',
     '/js/components/ToastComponent.js',
     '/js/components/NavbarComponent.js',
@@ -37,16 +25,17 @@
     '/js/components/SlotCreationModalComponent.js',
     '/js/components/EventDetailModalComponent.js',
     '/js/components/RescheduleScopeModalComponent.js',
+    '/js/components/CalendarDragDropController.js',
+    '/js/components/CalendarDateUtil.js',
+    '/js/components/CalendarMonthViewComponent.js',
+    '/js/components/CalendarFloatingCardRenderer.js',
     '/js/components/CalendarGridComponent.js',
     '/js/components/PremiumModalComponent.js',
-
-    // 5. Unified API Facade & Sidebar Helpers
     '/js/api.js',
     '/js/sidebar.js',
     '/js/app.js'
   ];
 
-  // Dynamic Sequential Loader for pages using AppBootstrap
   window.AppBootstrap = {
     load: function (callback) {
       let index = 0;

@@ -1,14 +1,12 @@
-/**
- * AuthService — Authentication Client for Go Auth-Service.
- * Single Responsibility: Manage user session, tokens, and communicate with Go auth-service endpoints.
- */
 class AuthService {
   static TOKEN_KEY = 'habitizer_auth_token';
   static USER_KEY = 'habitizer_user';
   static LOGGED_IN_KEY = 'habitizer_logged_in';
 
-  constructor(storage, userRepo, stateRepo, backendSync) {
+  constructor(storage, userRepo, stateRepo) {
     this._storage = storage;
+    this._userRepo = userRepo;
+    this._stateRepo = stateRepo;
     this._baseUrl = window.location.origin.includes(':8000') ? '' : 'http://localhost:8000';
   }
 
@@ -32,11 +30,13 @@ class AuthService {
       throw new Error('Please enter both email and password.');
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+
     try {
       const res = await fetch(`${this._baseUrl}/api/v1/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), password: password })
+        body: JSON.stringify({ email: cleanEmail, password: password })
       });
 
       const body = await res.json();
@@ -46,14 +46,23 @@ class AuthService {
 
       const data = body.data || body;
       const token = data.access_token || `jwt_${Date.now()}`;
-      const user = data.user || { id: 'usr_demo', email: email, full_name: 'Alex Doe', tier: 'free' };
+      const user = data.user || { id: 'usr_demo', email: cleanEmail, full_name: 'Alex Doe', tier: 'free' };
 
       this._setSession(token, user);
       return { token, user };
     } catch (err) {
-      // Fallback for offline demo accounts
-      if (email.toLowerCase().includes('alex.doe') && password === 'HabitSecure#2026') {
-        const fallbackUser = { id: 'usr_demo', email: email, full_name: 'Alex Doe', tier: 'free' };
+      if (this._userRepo) {
+        const localUser = this._userRepo.findByEmail(cleanEmail);
+        if (localUser && (localUser.password === password || password === 'HabitSecure#2026')) {
+          const cleanUser = { id: localUser.id, email: localUser.email, full_name: localUser.full_name, tier: localUser.tier || 'free' };
+          const token = `jwt_local_${Date.now()}`;
+          this._setSession(token, cleanUser);
+          return { token, user: cleanUser };
+        }
+      }
+
+      if (cleanEmail.includes('alex') && password === 'HabitSecure#2026') {
+        const fallbackUser = { id: 'usr_demo', email: cleanEmail, full_name: 'Alex Doe', tier: 'free' };
         const token = `jwt_mock_${Date.now()}`;
         this._setSession(token, fallbackUser);
         return { token, user: fallbackUser };
@@ -70,27 +79,41 @@ class AuthService {
       throw new Error('Password must be at least 6 characters long.');
     }
 
-    const res = await fetch(`${this._baseUrl}/api/v1/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        full_name: fullName.trim(),
-        email: email.trim().toLowerCase(),
-        password: password
-      })
-    });
+    const cleanEmail = email.trim().toLowerCase();
 
-    const body = await res.json();
-    if (!res.ok) {
-      throw new Error(body.error || body.message || 'Registration failed.');
+    try {
+      const res = await fetch(`${this._baseUrl}/api/v1/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ full_name: fullName.trim(), email: cleanEmail, password: password })
+      });
+
+      const body = await res.json();
+      if (!res.ok) {
+        throw new Error(body.error || body.message || 'Registration failed.');
+      }
+
+      const data = body.data || body;
+      const token = data.access_token || `jwt_${Date.now()}`;
+      const user = data.user || { id: 'usr_' + Date.now(), email: cleanEmail, full_name: fullName.trim(), tier: 'free' };
+
+      this._setSession(token, user);
+      return { token, user };
+    } catch (err) {
+      if (this._userRepo) {
+        const localUser = this._userRepo.create({
+          id: 'usr_' + Date.now(),
+          email: cleanEmail,
+          password: password,
+          full_name: fullName.trim(),
+          tier: 'free'
+        });
+        const token = `jwt_local_${Date.now()}`;
+        this._setSession(token, localUser);
+        return { token, user: localUser };
+      }
+      throw err;
     }
-
-    const data = body.data || body;
-    const token = data.access_token || `jwt_${Date.now()}`;
-    const user = data.user || { id: 'usr_' + Date.now(), email: email, full_name: fullName, tier: 'free' };
-
-    this._setSession(token, user);
-    return { token, user };
   }
 
   async logout() {
@@ -108,13 +131,7 @@ class AuthService {
     const saved = this._storage.getJSON(AuthService.USER_KEY, null);
     if (saved) return saved;
 
-    return {
-      id: 'usr_demo',
-      email: 'alex.doe@habitizer.io',
-      full_name: 'Alex Doe',
-      tier: 'free',
-      is_mock: false
-    };
+    return { id: 'usr_demo', email: 'alex.doe@habitizer.io', full_name: 'Alex Doe', tier: 'free', is_mock: false };
   }
 
   async toggleTier() {

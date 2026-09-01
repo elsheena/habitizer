@@ -9,6 +9,7 @@ import (
 	"github.com/habitizer/services/habit-service/internal/usecase"
 )
 
+// HabitHandler manages HTTP endpoints for habit loops, logs, check-ins, and replacement suggestions.
 type HabitHandler struct {
 	usecase usecase.HabitUsecase
 }
@@ -121,22 +122,6 @@ func (h *HabitHandler) PromoteReplacement(w http.ResponseWriter, r *http.Request
 	response.JSON(w, http.StatusOK, res, "Replacement habit promoted successfully")
 }
 
-func (h *HabitHandler) AutoSchedule(w http.ResponseWriter, r *http.Request) {
-	var dto domain.AutoScheduleDTO
-	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		response.Error(w, http.StatusBadRequest, "Invalid request payload", err.Error())
-		return
-	}
-
-	res, err := h.usecase.AutoScheduleHabits(r.Context(), dto)
-	if err != nil {
-		response.Error(w, http.StatusBadRequest, err.Error(), nil)
-		return
-	}
-
-	response.JSON(w, http.StatusOK, res, "Habits scheduled into free calendar slots")
-}
-
 func (h *HabitHandler) UpdateHabitTime(w http.ResponseWriter, r *http.Request) {
 	var dto domain.UpdateHabitTimeDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
@@ -151,66 +136,4 @@ func (h *HabitHandler) UpdateHabitTime(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.JSON(w, http.StatusOK, res, "Habit scheduled time updated successfully")
-}
-
-// Calendar Event Handlers
-func (h *HabitHandler) HandleCalendarEvents(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		userID := r.URL.Query().Get("user_id")
-		if userID == "" {
-			userID = "usr_demo"
-		}
-		events, err := h.usecase.GetCalendarEvents(r.Context(), userID)
-		if err != nil {
-			response.Error(w, http.StatusInternalServerError, err.Error(), nil)
-			return
-		}
-		response.JSON(w, http.StatusOK, events, "Calendar events retrieved")
-
-	case http.MethodPost:
-		var dto domain.CalendarEventDTO
-		if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-			response.Error(w, http.StatusBadRequest, "Invalid event payload", err.Error())
-			return
-		}
-		ev, err := h.usecase.CreateCalendarEvent(r.Context(), dto)
-		if err != nil {
-			response.Error(w, http.StatusBadRequest, err.Error(), nil)
-			return
-		}
-		response.JSON(w, http.StatusCreated, ev, "Calendar event created successfully")
-
-	case http.MethodPut:
-		var dto domain.CalendarEventDTO
-		if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-			response.Error(w, http.StatusBadRequest, "Invalid event payload", err.Error())
-			return
-		}
-		id := r.URL.Query().Get("id")
-		if id != "" {
-			dto.ID = id
-		}
-		ev, err := h.usecase.UpdateCalendarEvent(r.Context(), dto)
-		if err != nil {
-			response.Error(w, http.StatusBadRequest, err.Error(), nil)
-			return
-		}
-		response.JSON(w, http.StatusOK, ev, "Calendar event updated successfully")
-
-	case http.MethodDelete:
-		id := r.URL.Query().Get("id")
-		if id == "" {
-			response.Error(w, http.StatusBadRequest, "id query param required", nil)
-			return
-		}
-		if err := h.usecase.DeleteCalendarEvent(r.Context(), id); err != nil {
-			response.Error(w, http.StatusBadRequest, err.Error(), nil)
-			return
-		}
-		response.JSON(w, http.StatusOK, nil, "Calendar event deleted successfully")
-
-	default:
-		response.Error(w, http.StatusMethodNotAllowed, "Method not allowed", nil)
-	}
 }

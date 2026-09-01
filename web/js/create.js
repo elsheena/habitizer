@@ -1,15 +1,10 @@
 /**
  * Habitizer New Habit Controller
+ * Single Responsibility: Wire form controls, time window pills, and dynamic suggestions catalog.
  */
-
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.API && !window.API.requireAuth()) {
-    return;
-  }
-
-  if (window.Navbar) {
-    Navbar.render('create');
-  }
+document.addEventListener('DOMContentLoaded', async () => {
+  if (window.API && !window.API.requireAuth()) return;
+  if (window.Navbar) Navbar.render('create');
 
   const form = document.getElementById('create-habit-form');
   const badHabitInput = document.getElementById('bad_habit');
@@ -17,16 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const routineInput = document.getElementById('replacement_habit');
   const rewardInput = document.getElementById('reward');
   const scheduledTimeInput = document.getElementById('scheduled_time');
-
   const catHidden = document.getElementById('category-hidden');
   const freqHidden = document.getElementById('frequency-hidden');
+  const winStartHidden = document.getElementById('window-start-hidden');
+  const winEndHidden = document.getElementById('window-end-hidden');
 
-  // Read URL query parameters for prefilled time slot
   const urlParams = new URLSearchParams(window.location.search);
   const paramTime = urlParams.get('time');
-  if (paramTime && scheduledTimeInput) {
-    scheduledTimeInput.value = paramTime;
-  }
+  if (paramTime && scheduledTimeInput) scheduledTimeInput.value = paramTime;
 
   // Preview elements
   const prevCue = document.getElementById('prev-cue');
@@ -41,36 +34,68 @@ document.addEventListener('DOMContentLoaded', () => {
     if (prevReward) prevReward.textContent = rewardInput.value.trim() || '10 Shop Coins';
   }
 
-  // Live input listeners
   [badHabitInput, cueInput, routineInput, rewardInput].forEach(inp => {
     if (inp) inp.addEventListener('input', updateLivePreview);
   });
 
-  // Category Selection Pills
+  // Category & Frequency Pills
   document.querySelectorAll('#category-pills .selection-pill').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('#category-pills .selection-pill').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      const val = btn.getAttribute('data-val');
-      if (catHidden) catHidden.value = val;
+      if (catHidden) catHidden.value = btn.getAttribute('data-val');
     });
   });
 
-  // Frequency Selection Pills
   document.querySelectorAll('#frequency-pills .selection-pill').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('#frequency-pills .selection-pill').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      const val = btn.getAttribute('data-val');
-      if (freqHidden) freqHidden.value = val;
+      if (freqHidden) freqHidden.value = btn.getAttribute('data-val');
     });
   });
 
-  // Quick Routine Chips
+  // Time Window Pills
+  document.querySelectorAll('#time-window-pills .selection-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#time-window-pills .selection-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (winStartHidden) winStartHidden.value = btn.getAttribute('data-start') || '18:00';
+      if (winEndHidden) winEndHidden.value = btn.getAttribute('data-end') || '22:00';
+    });
+  });
+
+  // Dynamic Suggestions Catalog Integration
+  try {
+    const catalog = window.API?.getCatalog ? await window.API.getCatalog() : [];
+    const chipsWrap = document.querySelector('.quick-chips-wrap');
+    if (chipsWrap && catalog.length > 0) {
+      chipsWrap.textContent = '';
+      catalog.forEach(item => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'quick-chip';
+        chip.textContent = item.title;
+        chip.setAttribute('data-routine', item.title);
+        chip.addEventListener('click', () => {
+          if (routineInput) {
+            routineInput.value = item.title;
+            updateLivePreview();
+            if (window.Toast) Toast.show(`Selected routine: "${item.title}"`, 'info');
+          }
+        });
+        chipsWrap.appendChild(chip);
+      });
+    }
+  } catch (e) {
+    console.warn("Catalog fetch notice:", e);
+  }
+
+  // Quick Routine Chips Listener for pre-existing chips
   document.querySelectorAll('.quick-chip').forEach(chip => {
     chip.addEventListener('click', () => {
       const routine = chip.getAttribute('data-routine');
-      if (routineInput) {
+      if (routineInput && routine) {
         routineInput.value = routine;
         updateLivePreview();
         if (window.Toast) Toast.show(`Selected routine: "${routine}"`, 'info');
@@ -83,23 +108,19 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      // Check Active Habit Limit for Free Users
       try {
         const user = window.API ? await window.API.getCurrentUser() : null;
         const habits = window.API ? await window.API.getHabits() : [];
         const isPro = user && (user.tier === 'premium' || user.plan === 'pro');
-        const activeHabitsCount = habits ? habits.filter(h => h.is_active !== false).length : 0;
+        const activeCount = habits ? habits.filter(h => h.is_active !== false).length : 0;
 
-        if (!isPro && activeHabitsCount >= 3) {
-          if (window.PremiumModal) {
-            window.PremiumModal.open({ reason: 'limit_reached' });
-          } else if (window.Toast) {
-            window.Toast.show("Free Tier limit reached (max 3 habits). Upgrade to Pro for unlimited habits!", 'warning');
-          }
+        if (!isPro && activeCount >= 3) {
+          if (window.PremiumModal) window.PremiumModal.open({ reason: 'limit_reached' });
+          else if (window.Toast) window.Toast.show("Free Tier limit reached (max 3 habits). Upgrade for unlimited.", 'warning');
           return;
         }
-      } catch (checkErr) {
-        console.warn("Could not check habit limit:", checkErr);
+      } catch (err) {
+        console.warn("Limit check notice:", err);
       }
 
       const habitData = {
@@ -109,31 +130,23 @@ document.addEventListener('DOMContentLoaded', () => {
         scheduled_time: scheduledTimeInput ? scheduledTimeInput.value : '22:30',
         category: catHidden ? catHidden.value : 'Health & Diet',
         replacement_habit: routineInput.value.trim() || '5-Minute Deep Breathing',
-        reward: rewardInput.value.trim() || '10 Shop Coins'
+        reward: rewardInput.value.trim() || '10 Shop Coins',
+        preferred_window_start: winStartHidden ? winStartHidden.value : '18:00',
+        preferred_window_end: winEndHidden ? winEndHidden.value : '22:00'
       };
 
       try {
         const saveBtn = document.getElementById('btn-save-habit');
-        if (saveBtn) {
-          saveBtn.disabled = true;
-          saveBtn.textContent = 'Saving...';
-        }
-
+        if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
         await window.API.createHabit(habitData);
-
         if (window.Toast) Toast.show('Habit substitution loop created successfully!', 'success');
-
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 600);
+        setTimeout(() => { window.location.href = '/'; }, 500);
       } catch (err) {
-        if (window.Toast) Toast.show(err.message, 'error');
+        if (window.Toast) Toast.show(err.message || 'Failed to save habit', 'error');
         const saveBtn = document.getElementById('btn-save-habit');
-        if (saveBtn) {
-          saveBtn.disabled = false;
-          saveBtn.textContent = 'Save Habit Loop';
-        }
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Habit Loop'; }
       }
     });
   }
 });
+
